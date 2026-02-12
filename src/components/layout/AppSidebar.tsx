@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Lightbulb, Users, MessageSquare, BarChart3,
-  UserCheck, ClipboardList, Star, Clock, Settings, BookOpen,
+  UserCheck, ClipboardList, Star, Clock, Settings, BookOpen, User, FolderKanban,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useRole } from "@/contexts/RoleContext";
@@ -12,17 +12,22 @@ import {
 
 const studentMenu = [
   { title: "Dashboard", url: "/student", icon: LayoutDashboard },
+  { title: "My Profile", url: "/student/profile", icon: User },
   { title: "My Ideas", url: "/student/ideas", icon: Lightbulb },
   { title: "Submit Idea", url: "/student/ideas/new", icon: ClipboardList },
   { title: "My Team", url: "/student/team", icon: Users },
   { title: "Doubts", url: "/student/doubts", icon: MessageSquare },
+  { title: "Deadlines", url: "/student/deadlines", icon: Clock },
+  { title: "Reviews", url: "/student/reviews", icon: Star },
 ];
 
 const guideMenu = [
   { title: "Dashboard", url: "/guide", icon: LayoutDashboard },
   { title: "Review Queue", url: "/guide/reviews", icon: ClipboardList },
   { title: "My Students", url: "/guide/students", icon: Users },
+  { title: "Teams", url: "/guide/teams", icon: FolderKanban },
   { title: "Doubts", url: "/guide/doubts", icon: MessageSquare },
+  { title: "Deadlines", url: "/guide/deadlines", icon: Clock },
   { title: "Ratings", url: "/guide/ratings", icon: Star },
 ];
 
@@ -31,7 +36,7 @@ const adminMenu = [
   { title: "All Ideas", url: "/admin/ideas", icon: Lightbulb },
   { title: "Students", url: "/admin/students", icon: Users },
   { title: "Guides", url: "/admin/guides", icon: BookOpen },
-  { title: "Assignments", url: "/admin/assignments", icon: UserCheck },
+  { title: "Teams", url: "/admin/teams", icon: FolderKanban },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
 ];
 
