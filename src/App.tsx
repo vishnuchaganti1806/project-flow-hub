@@ -9,16 +9,40 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
-// Pages
+// Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import GuideDashboard from "./pages/guide/GuideDashboard";
+
+// Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentProfilePage from "./pages/student/StudentProfilePage";
+import StudentIdeasPage from "./pages/student/StudentIdeasPage";
+import StudentIdeaFormPage from "./pages/student/StudentIdeaFormPage";
+import StudentIdeaDetailPage from "./pages/student/StudentIdeaDetailPage";
+import StudentTeamPage from "./pages/student/StudentTeamPage";
+import StudentDoubtsPage from "./pages/student/StudentDoubtsPage";
+import StudentDeadlinesPage from "./pages/student/StudentDeadlinesPage";
+import StudentReviewsPage from "./pages/student/StudentReviewsPage";
+
+// Guide Pages
+import GuideDashboard from "./pages/guide/GuideDashboard";
+import GuideIdeaReviewPage from "./pages/guide/GuideIdeaReviewPage";
+import GuideStudentsPage from "./pages/guide/GuideStudentsPage";
+import GuideTeamsPage from "./pages/guide/GuideTeamsPage";
+import GuideDoubtsPage from "./pages/guide/GuideDoubtsPage";
+import GuideDeadlinesPage from "./pages/guide/GuideDeadlinesPage";
+import GuideRatingsPage from "./pages/guide/GuideRatingsPage";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
+import AdminGuidesPage from "./pages/admin/AdminGuidesPage";
+import AdminTeamsPage from "./pages/admin/AdminTeamsPage";
+import AdminIdeasPage from "./pages/admin/AdminIdeasPage";
+import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 
 const queryClient = new QueryClient();
 
-// Redirect to role-based dashboard
 function RoleRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -44,25 +68,32 @@ const App = () => (
                 <Route element={<DashboardLayout />}>
                   {/* Student routes */}
                   <Route path="/student" element={<StudentDashboard />} />
-                  <Route path="/student/ideas" element={<StudentDashboard />} />
-                  <Route path="/student/ideas/new" element={<StudentDashboard />} />
-                  <Route path="/student/team" element={<StudentDashboard />} />
-                  <Route path="/student/doubts" element={<StudentDashboard />} />
+                  <Route path="/student/profile" element={<StudentProfilePage />} />
+                  <Route path="/student/ideas" element={<StudentIdeasPage />} />
+                  <Route path="/student/ideas/new" element={<StudentIdeaFormPage />} />
+                  <Route path="/student/ideas/:id" element={<StudentIdeaDetailPage />} />
+                  <Route path="/student/ideas/:id/edit" element={<StudentIdeaFormPage />} />
+                  <Route path="/student/team" element={<StudentTeamPage />} />
+                  <Route path="/student/doubts" element={<StudentDoubtsPage />} />
+                  <Route path="/student/deadlines" element={<StudentDeadlinesPage />} />
+                  <Route path="/student/reviews" element={<StudentReviewsPage />} />
 
                   {/* Guide routes */}
                   <Route path="/guide" element={<GuideDashboard />} />
-                  <Route path="/guide/reviews" element={<GuideDashboard />} />
-                  <Route path="/guide/students" element={<GuideDashboard />} />
-                  <Route path="/guide/doubts" element={<GuideDashboard />} />
-                  <Route path="/guide/ratings" element={<GuideDashboard />} />
+                  <Route path="/guide/reviews" element={<GuideIdeaReviewPage />} />
+                  <Route path="/guide/students" element={<GuideStudentsPage />} />
+                  <Route path="/guide/teams" element={<GuideTeamsPage />} />
+                  <Route path="/guide/doubts" element={<GuideDoubtsPage />} />
+                  <Route path="/guide/deadlines" element={<GuideDeadlinesPage />} />
+                  <Route path="/guide/ratings" element={<GuideRatingsPage />} />
 
                   {/* Admin routes */}
                   <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/ideas" element={<AdminDashboard />} />
-                  <Route path="/admin/students" element={<AdminDashboard />} />
-                  <Route path="/admin/guides" element={<AdminDashboard />} />
-                  <Route path="/admin/assignments" element={<AdminDashboard />} />
-                  <Route path="/admin/analytics" element={<AdminDashboard />} />
+                  <Route path="/admin/ideas" element={<AdminIdeasPage />} />
+                  <Route path="/admin/students" element={<AdminStudentsPage />} />
+                  <Route path="/admin/guides" element={<AdminGuidesPage />} />
+                  <Route path="/admin/teams" element={<AdminTeamsPage />} />
+                  <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                 </Route>
               </Route>
 
