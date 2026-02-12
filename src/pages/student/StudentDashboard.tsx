@@ -1,4 +1,4 @@
-import { Lightbulb, Users, Clock, Star, TrendingUp, MessageSquare } from "lucide-react";
+import { Lightbulb, Users, Clock, Star, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/shared/StatCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -6,22 +6,45 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { mockStudents, mockIdeas, mockNotifications } from "@/data/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-
-const student = mockStudents[0];
-const myIdeas = mockIdeas.filter((i) => i.studentId === student.id);
+import { useStudentProfile } from "@/hooks/useStudents";
+import { useIdeas } from "@/hooks/useIdeas";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useDeadlines } from "@/hooks/useDeadlines";
+import { differenceInDays, parseISO, format } from "date-fns";
 
 export default function StudentDashboard() {
+  const { data: student, isLoading: studentLoading } = useStudentProfile();
+  const { data: allIdeas, isLoading: ideasLoading } = useIdeas();
+  const { data: notifications, isLoading: notifLoading } = useNotifications();
+  const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines();
+
+  const myIdeas = allIdeas?.filter((i) => i.studentId === student?.id) ?? [];
+
+  if (studentLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  if (!student) {
+    return <p className="text-muted-foreground p-6">Unable to load profile. Please try again.</p>;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Welcome back, {student.name.split(" ")[0]} 👋</h1>
         <p className="text-muted-foreground">Here's what's happening with your projects.</p>
       </div>
 
-      {/* Stats row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="My Ideas" value={myIdeas.length} icon={Lightbulb} description={`${myIdeas.filter(i => i.status === "approved").length} approved`} />
         <StatCard title="Team Members" value={2} icon={Users} description="Team Alpha" />
@@ -74,7 +97,9 @@ export default function StudentDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            {myIdeas.length === 0 ? (
+            {ideasLoading ? (
+              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+            ) : myIdeas.length === 0 ? (
               <p className="text-sm text-muted-foreground">No ideas submitted yet.</p>
             ) : (
               <div className="space-y-3">
@@ -100,16 +125,22 @@ export default function StudentDashboard() {
             <CardTitle className="text-base">Notifications</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {mockNotifications.slice(0, 4).map((n) => (
-                <div key={n.id} className={`flex items-start gap-3 rounded-lg border p-3 ${!n.read ? "bg-primary/5 border-primary/20" : ""}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{n.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
+            {notifLoading ? (
+              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+            ) : !notifications?.length ? (
+              <p className="text-sm text-muted-foreground">No notifications.</p>
+            ) : (
+              <div className="space-y-3">
+                {notifications.slice(0, 4).map((n) => (
+                  <div key={n.id} className={`flex items-start gap-3 rounded-lg border p-3 ${!n.read ? "bg-primary/5 border-primary/20" : ""}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{n.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -120,18 +151,29 @@ export default function StudentDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { title: "Milestone 2 Submission", date: "Feb 14, 2026", urgent: true },
-                { title: "Progress Report", date: "Feb 20, 2026", urgent: false },
-                { title: "Final Presentation", date: "Mar 15, 2026", urgent: false },
-              ].map((d, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg border p-3">
-                  <p className="text-sm font-medium">{d.title}</p>
-                  <Badge variant={d.urgent ? "destructive" : "secondary"} className="text-xs">{d.date}</Badge>
-                </div>
-              ))}
-            </div>
+            {deadlinesLoading ? (
+              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+            ) : !deadlines?.length ? (
+              <p className="text-sm text-muted-foreground">No deadlines.</p>
+            ) : (
+              <div className="space-y-3">
+                {deadlines.map((d) => {
+                  const daysLeft = differenceInDays(parseISO(d.date), new Date());
+                  const urgent = daysLeft <= 3;
+                  return (
+                    <div key={d.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <p className="text-sm font-medium">{d.title}</p>
+                        {daysLeft > 0 && <p className="text-xs text-muted-foreground">{daysLeft} days left</p>}
+                      </div>
+                      <Badge variant={urgent ? "destructive" : "secondary"} className="text-xs">
+                        {format(parseISO(d.date), "MMM dd, yyyy")}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

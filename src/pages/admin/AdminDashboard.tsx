@@ -1,8 +1,10 @@
-import { Users, BookOpen, Lightbulb, CheckCircle2, FolderKanban, UsersRound, TrendingUp, AlertTriangle } from "lucide-react";
+import { Users, BookOpen, Lightbulb, CheckCircle2, FolderKanban, UsersRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/shared/StatCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { adminStats, mockIdeas, mockGuides } from "@/data/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminStats } from "@/hooks/useAdminStats";
+import { useIdeas } from "@/hooks/useIdeas";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const barData = [
@@ -13,14 +15,31 @@ const barData = [
   { month: "Feb", ideas: 6 },
 ];
 
-const pieData = [
-  { name: "Approved", value: adminStats.approvedIdeas, color: "hsl(142,71%,45%)" },
-  { name: "Pending", value: adminStats.pendingReviews, color: "hsl(38,92%,50%)" },
-  { name: "Rejected", value: adminStats.rejectedIdeas, color: "hsl(0,72%,51%)" },
-  { name: "Draft", value: 1, color: "hsl(220,10%,70%)" },
-];
-
 export default function AdminDashboard() {
+  const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: ideas, isLoading: ideasLoading } = useIdeas();
+
+  if (statsLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  const s = stats ?? { totalStudents: 0, totalGuides: 0, totalTeams: 0, totalIdeas: 0, approvedIdeas: 0, activeProjects: 0, pendingReviews: 0, rejectedIdeas: 0 };
+
+  const pieData = [
+    { name: "Approved", value: s.approvedIdeas, color: "hsl(142,71%,45%)" },
+    { name: "Pending", value: s.pendingReviews, color: "hsl(38,92%,50%)" },
+    { name: "Rejected", value: s.rejectedIdeas, color: "hsl(0,72%,51%)" },
+    { name: "Draft", value: 1, color: "hsl(220,10%,70%)" },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -29,16 +48,15 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard title="Students" value={adminStats.totalStudents} icon={Users} />
-        <StatCard title="Guides" value={adminStats.totalGuides} icon={BookOpen} />
-        <StatCard title="Teams" value={adminStats.totalTeams} icon={UsersRound} />
-        <StatCard title="Ideas" value={adminStats.totalIdeas} icon={Lightbulb} />
-        <StatCard title="Approved" value={adminStats.approvedIdeas} icon={CheckCircle2} />
-        <StatCard title="Active Projects" value={adminStats.activeProjects} icon={FolderKanban} />
+        <StatCard title="Students" value={s.totalStudents} icon={Users} />
+        <StatCard title="Guides" value={s.totalGuides} icon={BookOpen} />
+        <StatCard title="Teams" value={s.totalTeams} icon={UsersRound} />
+        <StatCard title="Ideas" value={s.totalIdeas} icon={Lightbulb} />
+        <StatCard title="Approved" value={s.approvedIdeas} icon={CheckCircle2} />
+        <StatCard title="Active Projects" value={s.activeProjects} icon={FolderKanban} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Idea Submission Trends */}
         <Card className="animate-fade-in">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Idea Submission Trends</CardTitle>
@@ -56,7 +74,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Approval Distribution */}
         <Card className="animate-fade-in">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Idea Status Distribution</CardTitle>
@@ -92,17 +109,23 @@ export default function AdminDashboard() {
           <CardTitle className="text-base">Recent Project Ideas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {mockIdeas.slice(0, 5).map((idea) => (
-              <div key={idea.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{idea.title}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">by {idea.studentName} · {idea.submittedAt}</p>
+          {ideasLoading ? (
+            <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+          ) : !ideas?.length ? (
+            <p className="text-sm text-muted-foreground">No ideas found.</p>
+          ) : (
+            <div className="space-y-3">
+              {ideas.slice(0, 5).map((idea) => (
+                <div key={idea.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{idea.title}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">by {idea.studentName} · {idea.submittedAt}</p>
+                  </div>
+                  <StatusBadge status={idea.status} />
                 </div>
-                <StatusBadge status={idea.status} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

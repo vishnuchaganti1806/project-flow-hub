@@ -1,19 +1,20 @@
-import { Bell } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
-import { useRole } from "@/contexts/RoleContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { mockNotifications } from "@/data/mockData";
 
 export function TopHeader() {
-  const { role } = useRole();
-  const unread = mockNotifications.filter((n) => !n.read).length;
+  const { user, logout } = useAuth();
+  const { data: notifications } = useNotifications();
+  const unread = notifications?.filter((n) => !n.read).length ?? 0;
 
-  const name = role === "admin" ? "Admin" : role === "guide" ? "Dr. Sharma" : "Aarav Patel";
-  const initials = role === "admin" ? "AD" : role === "guide" ? "DS" : "AP";
+  const name = user?.name ?? "User";
+  const initials = user?.avatar ?? name.split(" ").map(n => n[0]).join("").slice(0, 2);
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-sm">
@@ -41,6 +42,10 @@ export function TopHeader() {
         </Avatar>
         <span className="hidden text-sm font-medium sm:block">{name}</span>
       </div>
+
+      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground" onClick={logout} title="Logout">
+        <LogOut className="h-4 w-4" />
+      </Button>
     </header>
   );
 }
