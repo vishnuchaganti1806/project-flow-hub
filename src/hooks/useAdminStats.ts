@@ -13,5 +13,6 @@ export function useAdminStats() {
         return adminStats;
       }
     },
+    staleTime: 60_000,
   });
 }

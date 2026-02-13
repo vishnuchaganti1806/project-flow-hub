@@ -13,5 +13,6 @@ export function useGuides() {
         return mockGuides;
       }
     },
+    staleTime: 30_000,
   });
 }

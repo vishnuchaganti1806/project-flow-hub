@@ -1,9 +1,11 @@
 import axios from "axios";
+import { toast } from "sonner";
 
-// Base API instance — update baseURL when backend is ready
+// Base API instance — reads from environment variable
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
   headers: { "Content-Type": "application/json" },
+  timeout: 15000,
 });
 
 // Attach JWT token to every request
@@ -23,6 +25,12 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
+    } else if (error.response?.status === 403) {
+      toast.error("Access denied. You don't have permission.");
+    } else if (error.response?.status >= 500) {
+      toast.error("Server error. Please try again later.");
+    } else if (!error.response) {
+      toast.error("Network error. Check your connection.");
     }
     return Promise.reject(error);
   }
@@ -57,6 +65,7 @@ export const studentsAPI = {
   getAll: () => api.get("/students"),
   getById: (id: string) => api.get(`/students/${id}`),
   getProfile: () => api.get("/students/profile"),
+  updateProfile: (data: Record<string, unknown>) => api.put("/students/profile", data),
 };
 
 // ─── Guides endpoints ───
@@ -70,8 +79,11 @@ export const teamsAPI = {
   getAll: () => api.get("/teams"),
   create: (data: { name: string; members: string[] }) =>
     api.post("/teams", data),
+  delete: (id: string) => api.delete(`/teams/${id}`),
   addMember: (teamId: string, memberId: string) =>
     api.post(`/teams/${teamId}/members`, { memberId }),
+  removeMember: (teamId: string, memberId: string) =>
+    api.delete(`/teams/${teamId}/members/${memberId}`),
   assignGuide: (teamId: string, guideId: string) =>
     api.patch(`/teams/${teamId}/guide`, { guideId }),
 };
@@ -85,6 +97,8 @@ export const doubtsAPI = {
     api.post("/doubts", data),
   reply: (doubtId: string, text: string) =>
     api.post(`/doubts/${doubtId}/reply`, { text }),
+  resolve: (doubtId: string) =>
+    api.patch(`/doubts/${doubtId}/resolve`),
 };
 
 // ─── Deadlines endpoints ───
@@ -92,14 +106,20 @@ export const deadlinesAPI = {
   getAll: () => api.get("/deadlines"),
   create: (data: { title: string; date: string; projectId?: string }) =>
     api.post("/deadlines", data),
+  update: (id: string, data: Record<string, unknown>) =>
+    api.put(`/deadlines/${id}`, data),
+  delete: (id: string) => api.delete(`/deadlines/${id}`),
 };
 
 // ─── Reviews & Ratings endpoints ───
 export const reviewsAPI = {
+  getAll: () => api.get("/reviews"),
   submit: (data: { studentId: string; rating: number; comment: string }) =>
     api.post("/reviews", data),
   getByStudent: (studentId: string) =>
     api.get(`/reviews/student/${studentId}`),
+  update: (id: string, data: Record<string, unknown>) =>
+    api.put(`/reviews/${id}`, data),
 };
 
 // ─── Admin stats endpoint ───
@@ -113,4 +133,5 @@ export const adminAPI = {
 export const notificationsAPI = {
   getAll: () => api.get("/notifications"),
   markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch("/notifications/read-all"),
 };

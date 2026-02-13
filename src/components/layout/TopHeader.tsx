@@ -1,17 +1,14 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications } from "@/hooks/useNotifications";
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
+import { NotificationDropdown } from "./NotificationDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
 export function TopHeader() {
   const { user, logout } = useAuth();
-  const { data: notifications } = useNotifications();
-  const unread = notifications?.filter((n) => !n.read).length ?? 0;
 
   const name = user?.name ?? "User";
   const initials = user?.avatar ?? name.split(" ").map(n => n[0]).join("").slice(0, 2);
@@ -24,15 +21,7 @@ export function TopHeader() {
 
       <RoleSwitcher />
       <ThemeToggle />
-
-      <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg">
-        <Bell className="h-4 w-4" />
-        {unread > 0 && (
-          <Badge className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full px-1 text-[10px] font-bold">
-            {unread}
-          </Badge>
-        )}
-      </Button>
+      <NotificationDropdown />
 
       <div className="flex items-center gap-2.5 pl-1">
         <Avatar className="h-8 w-8">
