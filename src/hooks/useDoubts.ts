@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { doubtsAPI } from "@/services/api";
 import { mockDoubts, type DoubtThread } from "@/data/mockData";
+import { toast } from "sonner";
 
 export function useDoubts() {
   return useQuery<DoubtThread[]>({
@@ -13,6 +14,7 @@ export function useDoubts() {
         return mockDoubts;
       }
     },
+    staleTime: 30_000,
   });
 }
 
@@ -27,7 +29,11 @@ export function useCreateDoubt() {
         return { id: "d-" + Date.now(), ...data };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["doubts"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doubts"] });
+      toast.success("Doubt posted");
+    },
+    onError: () => toast.error("Failed to post doubt"),
   });
 }
 
@@ -42,6 +48,29 @@ export function useReplyToDoubt() {
         return { doubtId, text };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["doubts"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doubts"] });
+      toast.success("Reply sent");
+    },
+    onError: () => toast.error("Failed to send reply"),
+  });
+}
+
+export function useResolveDoubt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (doubtId: string) => {
+      try {
+        const res = await doubtsAPI.resolve(doubtId);
+        return res.data;
+      } catch {
+        return { doubtId };
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doubts"] });
+      toast.success("Doubt resolved");
+    },
+    onError: () => toast.error("Failed to resolve doubt"),
   });
 }

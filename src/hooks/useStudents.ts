@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { studentsAPI } from "@/services/api";
 import { mockStudents, type Student } from "@/data/mockData";
+import { toast } from "sonner";
 
 export function useStudents() {
   return useQuery<Student[]>({
@@ -13,6 +14,7 @@ export function useStudents() {
         return mockStudents;
       }
     },
+    staleTime: 30_000,
   });
 }
 
@@ -27,5 +29,24 @@ export function useStudentProfile() {
         return mockStudents[0];
       }
     },
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Record<string, unknown>) => {
+      try {
+        const res = await studentsAPI.updateProfile(data);
+        return res.data;
+      } catch {
+        return data;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-profile"] });
+      toast.success("Profile updated");
+    },
+    onError: () => toast.error("Failed to update profile"),
   });
 }

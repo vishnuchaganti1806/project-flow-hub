@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ideasAPI } from "@/services/api";
 import { mockIdeas, type ProjectIdea, type IdeaStatus } from "@/data/mockData";
+import { toast } from "sonner";
 
-// Fetches all ideas — falls back to mock data when API unavailable
 export function useIdeas(filters?: Record<string, string>) {
   return useQuery<ProjectIdea[]>({
     queryKey: ["ideas", filters],
@@ -11,10 +11,10 @@ export function useIdeas(filters?: Record<string, string>) {
         const res = await ideasAPI.getAll(filters);
         return res.data;
       } catch {
-        // Fallback to mock data in dev
         return mockIdeas;
       }
     },
+    staleTime: 30_000,
   });
 }
 
@@ -43,11 +43,14 @@ export function useCreateIdea() {
         const res = await ideasAPI.create(data as Record<string, unknown>);
         return res.data;
       } catch {
-        // Mock: return the data with a generated id
         return { ...data, id: "i-" + Date.now(), status: "draft" as IdeaStatus, submittedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ideas"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Idea saved successfully");
+    },
+    onError: () => toast.error("Failed to save idea"),
   });
 }
 
@@ -62,7 +65,11 @@ export function useUpdateIdea() {
         return { id, ...data, updatedAt: new Date().toISOString() };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ideas"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Idea updated");
+    },
+    onError: () => toast.error("Failed to update idea"),
   });
 }
 
@@ -77,7 +84,11 @@ export function useUpdateIdeaStatus() {
         return { id, status, feedback };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ideas"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Status updated");
+    },
+    onError: () => toast.error("Failed to update status"),
   });
 }
 
@@ -88,9 +99,13 @@ export function useDeleteIdea() {
       try {
         await ideasAPI.delete(id);
       } catch {
-        // mock: no-op
+        // mock no-op
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ideas"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ideas"] });
+      toast.success("Idea deleted");
+    },
+    onError: () => toast.error("Failed to delete idea"),
   });
 }

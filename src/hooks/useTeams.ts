@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { teamsAPI } from "@/services/api";
 import { mockTeams, type Team } from "@/data/mockData";
+import { toast } from "sonner";
 
 export function useTeams() {
   return useQuery<Team[]>({
@@ -13,6 +14,7 @@ export function useTeams() {
         return mockTeams;
       }
     },
+    staleTime: 30_000,
   });
 }
 
@@ -27,7 +29,29 @@ export function useCreateTeam() {
         return { id: "t-" + Date.now(), ...data };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["teams"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["teams"] });
+      toast.success("Team created");
+    },
+    onError: () => toast.error("Failed to create team"),
+  });
+}
+
+export function useDeleteTeam() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await teamsAPI.delete(id);
+      } catch {
+        // mock no-op
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["teams"] });
+      toast.success("Team deleted");
+    },
+    onError: () => toast.error("Failed to delete team"),
   });
 }
 
@@ -42,6 +66,10 @@ export function useAssignGuideToTeam() {
         return { teamId, guideId };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["teams"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["teams"] });
+      toast.success("Guide assigned");
+    },
+    onError: () => toast.error("Failed to assign guide"),
   });
 }

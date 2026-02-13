@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deadlinesAPI } from "@/services/api";
+import { toast } from "sonner";
 
 export interface Deadline {
   id: string;
@@ -8,7 +9,6 @@ export interface Deadline {
   projectId?: string;
 }
 
-// Default mock deadlines
 const mockDeadlines: Deadline[] = [
   { id: "dl1", title: "Milestone 2 Submission", date: "2026-02-14" },
   { id: "dl2", title: "Progress Report", date: "2026-02-20" },
@@ -26,6 +26,7 @@ export function useDeadlines() {
         return mockDeadlines;
       }
     },
+    staleTime: 30_000,
   });
 }
 
@@ -40,6 +41,28 @@ export function useCreateDeadline() {
         return { id: "dl-" + Date.now(), ...data };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["deadlines"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["deadlines"] });
+      toast.success("Deadline created");
+    },
+    onError: () => toast.error("Failed to create deadline"),
+  });
+}
+
+export function useDeleteDeadline() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await deadlinesAPI.delete(id);
+      } catch {
+        // mock no-op
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["deadlines"] });
+      toast.success("Deadline deleted");
+    },
+    onError: () => toast.error("Failed to delete deadline"),
   });
 }
