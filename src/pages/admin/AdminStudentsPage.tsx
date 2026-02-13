@@ -48,10 +48,10 @@ export default function AdminStudentsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search students..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={skillFilter} onValueChange={setSkillFilter}>
+        <Select value={skillFilter || "all"} onValueChange={(v) => setSkillFilter(v === "all" ? "" : v)}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Filter by skill" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Skills</SelectItem>
+            <SelectItem value="all">All Skills</SelectItem>
             {allSkills.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
