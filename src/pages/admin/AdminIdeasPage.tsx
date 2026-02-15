@@ -79,7 +79,7 @@ export default function AdminIdeasPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">by {idea.studentName} · {idea.submittedAt}</p>
                   <div className="flex flex-wrap gap-1">
-                    {idea.techStack.slice(0, 4).map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
+                    {idea.techStack?.slice(0, 4).map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
                   </div>
                 </div>
               </CardContent>

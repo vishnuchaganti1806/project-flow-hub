@@ -20,7 +20,7 @@ export default function StudentDashboard() {
   const { data: notifications, isLoading: notifLoading } = useNotifications();
   const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines();
 
-  const myIdeas = allIdeas?.filter((i) => i.studentId === student?.id) ?? [];
+  const myIdeas = allIdeas?.filter((i) => i.studentId === student?.userId) ?? [];
 
   if (studentLoading) {
     return (
@@ -41,7 +41,7 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back, {student.name.split(" ")[0]} 👋</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Welcome back, {(student.name || "Student").split(" ")[0]} 👋</h1>
         <p className="text-muted-foreground">Here's what's happening with your projects.</p>
       </div>
 

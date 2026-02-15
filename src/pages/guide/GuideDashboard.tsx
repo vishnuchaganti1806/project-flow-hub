@@ -14,10 +14,8 @@ export default function GuideDashboard() {
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: ideas, isLoading: ideasLoading } = useIdeas();
 
-  // Filter for this guide's students and their ideas
-  const guideId = user?.id === "u2" ? "g1" : "g1"; // Map auth user to guide id
-  const myStudents = students?.filter((s) => s.guideId === guideId) ?? [];
-  const ideasForReview = ideas?.filter((i) => myStudents.some((s) => s.id === i.studentId)) ?? [];
+  const myStudents = students?.filter((s) => s.guideId === user?.id) ?? [];
+  const ideasForReview = ideas?.filter((i) => myStudents.some((s) => s.userId === i.studentId)) ?? [];
 
   const guideName = user?.name ?? "Guide";
 
@@ -48,11 +46,8 @@ export default function GuideDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Review Queue */}
         <Card className="animate-fade-in">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Idea Review Queue</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Idea Review Queue</CardTitle></CardHeader>
           <CardContent>
             {ideasForReview.length === 0 ? (
               <p className="text-sm text-muted-foreground">No ideas to review.</p>
@@ -72,11 +67,8 @@ export default function GuideDashboard() {
           </CardContent>
         </Card>
 
-        {/* Students Overview */}
         <Card className="animate-fade-in">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">My Students</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">My Students</CardTitle></CardHeader>
           <CardContent>
             {myStudents.length === 0 ? (
               <p className="text-sm text-muted-foreground">No students assigned.</p>
@@ -109,7 +101,6 @@ export default function GuideDashboard() {
         </Card>
       </div>
 
-      {/* Deadlines */}
       <Card className="animate-fade-in">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

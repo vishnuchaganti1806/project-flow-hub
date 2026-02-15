@@ -1,18 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationsAPI } from "@/services/api";
-import { mockNotifications, type Notification } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import type { Notification } from "@/data/mockData";
 
 export function useNotifications() {
+  const { user } = useAuth();
   return useQuery<Notification[]>({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", user?.id],
     queryFn: async () => {
-      try {
-        const res = await notificationsAPI.getAll();
-        return res.data;
-      } catch {
-        return mockNotifications;
-      }
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data || []).map(n => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type as Notification["type"],
+        read: n.read,
+        createdAt: n.created_at,
+      }));
     },
+    enabled: !!user,
     refetchInterval: 30_000,
     staleTime: 10_000,
   });
@@ -22,22 +36,8 @@ export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await notificationsAPI.markRead(id);
-      } catch {
-        // mock: optimistic update handled below
-      }
-    },
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ["notifications"] });
-      const prev = qc.getQueryData<Notification[]>(["notifications"]);
-      qc.setQueryData<Notification[]>(["notifications"], (old) =>
-        old?.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-      return { prev };
-    },
-    onError: (_err, _id, context) => {
-      if (context?.prev) qc.setQueryData(["notifications"], context.prev);
+      const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+      if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
@@ -45,24 +45,12 @@ export function useMarkNotificationRead() {
 
 export function useMarkAllNotificationsRead() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async () => {
-      try {
-        await notificationsAPI.markAllRead();
-      } catch {
-        // mock no-op
-      }
-    },
-    onMutate: async () => {
-      await qc.cancelQueries({ queryKey: ["notifications"] });
-      const prev = qc.getQueryData<Notification[]>(["notifications"]);
-      qc.setQueryData<Notification[]>(["notifications"], (old) =>
-        old?.map((n) => ({ ...n, read: true }))
-      );
-      return { prev };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.prev) qc.setQueryData(["notifications"], context.prev);
+      if (!user) return;
+      const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+      if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });

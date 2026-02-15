@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                     <p className="truncate text-sm font-medium">{idea.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">by {idea.studentName} · {idea.submittedAt}</p>
                   </div>
-                  <StatusBadge status={idea.status} />
+                  <StatusBadge status={idea.status as any} />
                 </div>
               ))}
             </div>

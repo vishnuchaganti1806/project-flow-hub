@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { authAPI } from "@/services/api";
-import type { UserRole } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
+
+export type UserRole = "student" | "guide" | "admin";
 
 export interface AuthUser {
   id: string;
@@ -12,7 +14,7 @@ export interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  token: string | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -22,88 +24,117 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// ─── Mock auth for development (remove when backend is ready) ───
-const MOCK_USERS: AuthUser[] = [
-  { id: "u1", name: "Aarav Patel", email: "student@demo.com", role: "student", avatar: "AP" },
-  { id: "u2", name: "Dr. Sharma", email: "guide@demo.com", role: "guide", avatar: "DS" },
-  { id: "u3", name: "Admin User", email: "admin@demo.com", role: "admin", avatar: "AD" },
-];
+async function fetchUserRole(userId: string): Promise<UserRole> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data?.role as UserRole) || "student";
+}
 
-function mockLogin(email: string, _password: string): AuthUser | null {
-  return MOCK_USERS.find((u) => u.email === email) ?? null;
+async function fetchProfile(userId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("name, email, avatar")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data;
+}
+
+async function buildAuthUser(user: User): Promise<AuthUser> {
+  const [role, profile] = await Promise.all([
+    fetchUserRole(user.id),
+    fetchProfile(user.id),
+  ]);
+  return {
+    id: user.id,
+    name: profile?.name || user.user_metadata?.name || "",
+    email: profile?.email || user.email || "",
+    role,
+    avatar: profile?.avatar || (profile?.name || "").split(" ").map((n: string) => n[0]).join(""),
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      setSession(newSession);
+      if (newSession?.user) {
+        // Use setTimeout to avoid Supabase client deadlock
+        setTimeout(async () => {
+          const authUser = await buildAuthUser(newSession.user);
+          setUser(authUser);
+          setIsLoading(false);
+        }, 0);
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      if (existingSession?.user) {
+        const authUser = await buildAuthUser(existingSession.user);
+        setUser(authUser);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
-    try {
-      // Try real API first
-      const res = await authAPI.login({ email, password });
-      const { token: jwt, user: userData } = res.data;
-      localStorage.setItem("token", jwt);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setToken(jwt);
-      setUser(userData);
-    } catch {
-      // Fallback to mock auth in development
-      const mockUser = mockLogin(email, password);
-      if (!mockUser) throw new Error("Invalid credentials");
-      const fakeToken = "mock-jwt-" + mockUser.id;
-      localStorage.setItem("token", fakeToken);
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setToken(fakeToken);
-      setUser(mockUser);
-    } finally {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
       setIsLoading(false);
+      throw new Error(error.message);
     }
+    // State update handled by onAuthStateChange
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string, role: string) => {
     setIsLoading(true);
-    try {
-      const res = await authAPI.register({ name, email, password, role });
-      const { token: jwt, user: userData } = res.data;
-      localStorage.setItem("token", jwt);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setToken(jwt);
-      setUser(userData);
-    } catch {
-      // Mock registration fallback
-      const newUser: AuthUser = { id: "u-new", name, email, role: role as UserRole, avatar: name.split(" ").map(n => n[0]).join("") };
-      const fakeToken = "mock-jwt-new";
-      localStorage.setItem("token", fakeToken);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      setToken(fakeToken);
-      setUser(newUser);
-    } finally {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) {
       setIsLoading(false);
+      throw new Error(error.message);
+    }
+    // Assign role
+    if (data.user) {
+      await supabase.from("user_roles").insert({ user_id: data.user.id, role: role as UserRole });
+      // Create role-specific record
+      if (role === "student") {
+        await supabase.from("students").insert({ user_id: data.user.id });
+      } else if (role === "guide") {
+        await supabase.from("guides").insert({ user_id: data.user.id });
+      }
     }
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, session, isAuthenticated: !!user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

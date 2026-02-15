@@ -1,30 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { deadlinesAPI } from "@/services/api";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { Deadline } from "@/data/mockData";
 
-export interface Deadline {
-  id: string;
-  title: string;
-  date: string;
-  projectId?: string;
-}
-
-const mockDeadlines: Deadline[] = [
-  { id: "dl1", title: "Milestone 2 Submission", date: "2026-02-14" },
-  { id: "dl2", title: "Progress Report", date: "2026-02-20" },
-  { id: "dl3", title: "Final Presentation", date: "2026-03-15" },
-];
+export type { Deadline } from "@/data/mockData";
 
 export function useDeadlines() {
   return useQuery<Deadline[]>({
     queryKey: ["deadlines"],
     queryFn: async () => {
-      try {
-        const res = await deadlinesAPI.getAll();
-        return res.data;
-      } catch {
-        return mockDeadlines;
-      }
+      const { data, error } = await supabase.from("deadlines").select("*").order("date", { ascending: true });
+      if (error) throw error;
+      return (data || []).map(d => ({
+        id: d.id,
+        title: d.title,
+        date: d.date,
+        projectId: d.project_id || undefined,
+      }));
     },
     staleTime: 30_000,
   });
@@ -32,19 +25,19 @@ export function useDeadlines() {
 
 export function useCreateDeadline() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (data: { title: string; date: string; projectId?: string }) => {
-      try {
-        const res = await deadlinesAPI.create(data);
-        return res.data;
-      } catch {
-        return { id: "dl-" + Date.now(), ...data };
-      }
+      const { data: result, error } = await supabase.from("deadlines").insert({
+        title: data.title,
+        date: data.date,
+        project_id: data.projectId || null,
+        created_by: user!.id,
+      }).select().single();
+      if (error) throw error;
+      return result;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["deadlines"] });
-      toast.success("Deadline created");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["deadlines"] }); toast.success("Deadline created"); },
     onError: () => toast.error("Failed to create deadline"),
   });
 }
@@ -53,16 +46,10 @@ export function useDeleteDeadline() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await deadlinesAPI.delete(id);
-      } catch {
-        // mock no-op
-      }
+      const { error } = await supabase.from("deadlines").delete().eq("id", id);
+      if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["deadlines"] });
-      toast.success("Deadline deleted");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["deadlines"] }); toast.success("Deadline deleted"); },
     onError: () => toast.error("Failed to delete deadline"),
   });
 }

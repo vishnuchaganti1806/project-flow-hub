@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useIdea } from "@/hooks/useIdeas";
 import { ArrowLeft, Edit } from "lucide-react";
-import type { IdeaStatus } from "@/data/mockData";
+import type { IdeaStatus } from "@/hooks/useIdeas";
 
 const STATUS_STEPS: { status: IdeaStatus; label: string }[] = [
   { status: "draft", label: "Draft" },

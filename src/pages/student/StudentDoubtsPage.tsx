@@ -26,11 +26,11 @@ export default function StudentDoubtsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const myDoubts = doubts?.filter((d) => d.studentId === student?.id) ?? [];
+  const myDoubts = doubts?.filter((d) => d.studentId === student?.userId) ?? [];
 
   const handlePostDoubt = () => {
     if (!newSubject.trim() || !newMessage.trim()) return;
-    createDoubt.mutate({ subject: newSubject, guideId: student?.guideId ?? "", message: newMessage }, {
+    createDoubt.mutate({ subject: newSubject, guide_id: student?.guideId ?? "", message: newMessage }, {
       onSuccess: () => {
         toast({ title: "Doubt Posted" });
         setDialogOpen(false);

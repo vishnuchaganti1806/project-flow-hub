@@ -38,8 +38,7 @@ export default function GuideRatingsPage() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  const guideId = user?.id === "u2" ? "g1" : "g1";
-  const myStudents = (students ?? []).filter((s) => s.guideId === guideId);
+  const myStudents = (students ?? []).filter((s) => s.guideId === user?.id);
 
   const handleSubmit = () => {
     if (!selectedStudent || rating === 0 || !comment.trim()) return;
@@ -75,7 +74,7 @@ export default function GuideRatingsPage() {
                 <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                   <SelectTrigger><SelectValue placeholder="Choose a student" /></SelectTrigger>
                   <SelectContent>
-                    {myStudents.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    {myStudents.map((s) => <SelectItem key={s.id} value={s.userId}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -95,7 +94,6 @@ export default function GuideRatingsPage() {
         </Dialog>
       </div>
 
-      {/* Review History */}
       {!reviews?.length ? (
         <Card className="animate-fade-in">
           <CardContent className="flex flex-col items-center py-12 text-center">

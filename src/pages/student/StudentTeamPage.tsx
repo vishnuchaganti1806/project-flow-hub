@@ -24,8 +24,8 @@ export default function StudentTeamPage() {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const myTeam = teams?.find((t) => t.members.includes(student?.id ?? ""));
-  const teamMembers = allStudents?.filter((s) => myTeam?.members.includes(s.id)) ?? [];
+  const myTeam = teams?.find((t) => t.members.includes(student?.userId ?? ""));
+  const teamMembers = allStudents?.filter((s) => myTeam?.members.includes(s.userId)) ?? [];
 
   const handleCreateTeam = () => {
     if (!teamName.trim()) return;

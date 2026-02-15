@@ -27,9 +27,8 @@ export default function GuideIdeaReviewPage() {
   const [selectedIdea, setSelectedIdea] = useState<ProjectIdea | null>(null);
   const [feedback, setFeedback] = useState("");
 
-  const guideId = user?.id === "u2" ? "g1" : "g1";
-  const myStudents = students?.filter((s) => s.guideId === guideId) ?? [];
-  const myIdeas = (ideas ?? []).filter((i) => myStudents.some((s) => s.id === i.studentId));
+  const myStudents = students?.filter((s) => s.guideId === user?.id) ?? [];
+  const myIdeas = (ideas ?? []).filter((i) => myStudents.some((s) => s.userId === i.studentId));
 
   const filtered = myIdeas
     .filter((i) => statusFilter === "all" || i.status === statusFilter)
@@ -114,7 +113,6 @@ export default function GuideIdeaReviewPage() {
         </div>
       )}
 
-      {/* Detail Modal */}
       <Dialog open={!!selectedIdea} onOpenChange={(open) => !open && setSelectedIdea(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {selectedIdea && (
