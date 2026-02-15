@@ -14,7 +14,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { IdeaStatus } from "@/data/mockData";
+import type { IdeaStatus } from "@/hooks/useIdeas";
 
 export default function StudentIdeasPage() {
   const { data: student } = useStudentProfile();
@@ -24,7 +24,7 @@ export default function StudentIdeasPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const myIdeas = (allIdeas ?? []).filter((i) => i.studentId === student?.id);
+  const myIdeas = (allIdeas ?? []).filter((i) => i.studentId === student?.userId);
   const filtered = myIdeas
     .filter((i) => statusFilter === "all" || i.status === statusFilter)
     .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()));

@@ -19,8 +19,7 @@ export default function GuideDoubtsPage() {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const guideId = user?.id === "u2" ? "g1" : "g1";
-  const myDoubts = (doubts ?? []).filter((d) => d.guideId === guideId);
+  const myDoubts = (doubts ?? []).filter((d) => d.guideId === user?.id);
   const filtered = myDoubts.filter((d) => d.subject.toLowerCase().includes(search.toLowerCase()) || d.studentName.toLowerCase().includes(search.toLowerCase()));
 
   const handleReply = (doubtId: string) => {
@@ -84,7 +83,7 @@ export default function GuideDoubtsPage() {
                             <p className="text-xs font-medium mb-1">{m.sender}</p>
                             <p className="text-sm">{m.text}</p>
                             <p className={`text-[10px] mt-1 ${isGuide ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                              {format(parseISO(m.timestamp), "MMM dd, h:mm a")}
+                              {m.timestamp ? format(parseISO(m.timestamp), "MMM dd, h:mm a") : ""}
                             </p>
                           </div>
                         </div>

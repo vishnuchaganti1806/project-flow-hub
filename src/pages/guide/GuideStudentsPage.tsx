@@ -18,8 +18,7 @@ export default function GuideStudentsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Student | null>(null);
 
-  const guideId = user?.id === "u2" ? "g1" : "g1";
-  const myStudents = (students ?? []).filter((s) => s.guideId === guideId);
+  const myStudents = (students ?? []).filter((s) => s.guideId === user?.id);
   const filtered = myStudents.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
@@ -79,14 +78,11 @@ export default function GuideStudentsPage() {
         </div>
       )}
 
-      {/* Profile Modal */}
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent>
           {selected && (
             <>
-              <DialogHeader>
-                <DialogTitle>Student Profile</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Student Profile</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-14 w-14">

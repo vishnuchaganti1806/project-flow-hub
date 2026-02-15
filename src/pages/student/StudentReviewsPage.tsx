@@ -17,7 +17,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function StudentReviewsPage() {
   const { data: student } = useStudentProfile();
-  const { data: reviews, isLoading } = useReviews(student?.id);
+  const { data: reviews, isLoading } = useReviews(student?.userId);
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
 

@@ -32,9 +32,9 @@ export default function StudentProfilePage() {
   }
 
   if (!initialized && student) {
-    setName(student.name);
-    setEmail(student.email);
-    setSkills([...student.skills]);
+    setName(student.name || "");
+    setEmail(student.email || "");
+    setSkills([...(student.skills || [])]);
     setInitialized(true);
   }
 
