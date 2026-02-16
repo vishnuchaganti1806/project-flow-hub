@@ -5,14 +5,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { RoleProvider } from "@/contexts/RoleContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Auth Pages (eager — small, critical path)
-import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegisterPage";
+// Auth pages
+import RoleLoginPage from "./pages/auth/RoleLoginPage";
+const ChangePasswordPage = lazy(() => import("./pages/auth/ChangePasswordPage"));
+const UnauthorizedPage = lazy(() => import("./pages/auth/UnauthorizedPage"));
 
 // Lazy-loaded pages
 const StudentDashboard = lazy(() => import("./pages/student/StudentDashboard"));
@@ -39,16 +40,14 @@ const AdminGuidesPage = lazy(() => import("./pages/admin/AdminGuidesPage"));
 const AdminTeamsPage = lazy(() => import("./pages/admin/AdminTeamsPage"));
 const AdminIdeasPage = lazy(() => import("./pages/admin/AdminIdeasPage"));
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
+const AdminUserManagementPage = lazy(() => import("./pages/admin/AdminUserManagementPage"));
+const AdminActivityLogsPage = lazy(() => import("./pages/admin/AdminActivityLogsPage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30_000,
-      refetchOnWindowFocus: false,
-    },
+    queries: { retry: 1, staleTime: 30_000, refetchOnWindowFocus: false },
   },
 });
 
@@ -69,7 +68,8 @@ function PageLoader() {
 
 function RoleRedirect() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/student/login" replace />;
+  if (user.mustChangePassword) return <Navigate to="/change-password" replace />;
   return <Navigate to={`/${user.role}`} replace />;
 }
 
@@ -80,18 +80,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <RoleProvider>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public login routes */}
+              <Route path="/login" element={<Navigate to="/student/login" replace />} />
+              <Route path="/student/login" element={<RoleLoginPage expectedRole="student" />} />
+              <Route path="/guide/login" element={<RoleLoginPage expectedRole="guide" />} />
+              <Route path="/admin/login" element={<RoleLoginPage expectedRole="admin" />} />
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-                {/* Protected dashboard routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/" element={<RoleRedirect />} />
+              {/* Force password change (authenticated but no role restriction) */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/change-password" element={<ChangePasswordPage />} />
+
+                <Route path="/" element={<RoleRedirect />} />
+
+                {/* Student routes */}
+                <Route element={<RoleProtectedRoute allowedRoles={["student"]} />}>
                   <Route element={<DashboardLayout />}>
-                    {/* Student routes */}
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/student/profile" element={<StudentProfilePage />} />
                     <Route path="/student/ideas" element={<StudentIdeasPage />} />
@@ -102,8 +108,12 @@ const App = () => (
                     <Route path="/student/doubts" element={<StudentDoubtsPage />} />
                     <Route path="/student/deadlines" element={<StudentDeadlinesPage />} />
                     <Route path="/student/reviews" element={<StudentReviewsPage />} />
+                  </Route>
+                </Route>
 
-                    {/* Guide routes */}
+                {/* Guide routes */}
+                <Route element={<RoleProtectedRoute allowedRoles={["guide"]} />}>
+                  <Route element={<DashboardLayout />}>
                     <Route path="/guide" element={<GuideDashboard />} />
                     <Route path="/guide/reviews" element={<GuideIdeaReviewPage />} />
                     <Route path="/guide/students" element={<GuideStudentsPage />} />
@@ -111,21 +121,27 @@ const App = () => (
                     <Route path="/guide/doubts" element={<GuideDoubtsPage />} />
                     <Route path="/guide/deadlines" element={<GuideDeadlinesPage />} />
                     <Route path="/guide/ratings" element={<GuideRatingsPage />} />
+                  </Route>
+                </Route>
 
-                    {/* Admin routes */}
+                {/* Admin routes */}
+                <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
+                  <Route element={<DashboardLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/users" element={<AdminUserManagementPage />} />
                     <Route path="/admin/ideas" element={<AdminIdeasPage />} />
                     <Route path="/admin/students" element={<AdminStudentsPage />} />
                     <Route path="/admin/guides" element={<AdminGuidesPage />} />
                     <Route path="/admin/teams" element={<AdminTeamsPage />} />
                     <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+                    <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />
                   </Route>
                 </Route>
+              </Route>
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </RoleProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

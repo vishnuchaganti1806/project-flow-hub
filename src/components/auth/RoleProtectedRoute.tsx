@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/contexts/AuthContext";
 
 interface Props {
   allowedRoles: UserRole[];
@@ -14,9 +14,12 @@ export function RoleProtectedRoute({ allowedRoles }: Props) {
   const { user } = useAuth();
 
   if (!user || !allowedRoles.includes(user.role)) {
-    // Redirect to user's own dashboard
-    const fallback = user ? `/${user.role}` : "/login";
-    return <Navigate to={fallback} replace />;
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Force password change redirect
+  if (user.mustChangePassword) {
+    return <Navigate to="/change-password" replace />;
   }
 
   return <Outlet />;

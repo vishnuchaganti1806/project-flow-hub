@@ -3,9 +3,9 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "./ThemeToggle";
-import { RoleSwitcher } from "./RoleSwitcher";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export function TopHeader() {
   const { user, logout } = useAuth();
@@ -19,7 +19,6 @@ export function TopHeader() {
 
       <div className="flex-1" />
 
-      <RoleSwitcher />
       <ThemeToggle />
       <NotificationDropdown />
 
@@ -29,7 +28,10 @@ export function TopHeader() {
             {initials}
           </AvatarFallback>
         </Avatar>
-        <span className="hidden text-sm font-medium sm:block">{name}</span>
+        <div className="hidden sm:flex sm:flex-col">
+          <span className="text-sm font-medium">{name}</span>
+          <Badge variant="secondary" className="text-[10px] w-fit capitalize">{user?.role}</Badge>
+        </div>
       </div>
 
       <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground" onClick={logout} title="Logout">
