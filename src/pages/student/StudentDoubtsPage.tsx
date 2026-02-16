@@ -30,7 +30,7 @@ export default function StudentDoubtsPage() {
 
   const handlePostDoubt = () => {
     if (!newSubject.trim() || !newMessage.trim()) return;
-    createDoubt.mutate({ subject: newSubject, guide_id: student?.guideId ?? "", message: newMessage }, {
+    createDoubt.mutate({ subject: newSubject, guideId: student?.guideId ?? "", message: newMessage }, {
       onSuccess: () => {
         toast({ title: "Doubt Posted" });
         setDialogOpen(false);
