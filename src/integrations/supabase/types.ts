@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deadlines: {
         Row: {
           created_at: string
@@ -191,6 +215,8 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_active: boolean
+          must_change_password: boolean
           name: string
           updated_at: string
           user_id: string
@@ -200,6 +226,8 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_active?: boolean
+          must_change_password?: boolean
           name?: string
           updated_at?: string
           user_id: string
@@ -209,6 +237,8 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_active?: boolean
+          must_change_password?: boolean
           name?: string
           updated_at?: string
           user_id?: string

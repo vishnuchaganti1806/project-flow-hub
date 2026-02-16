@@ -112,7 +112,8 @@ export default function StudentProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input id="email" type="email" value={email} disabled className="opacity-60" />
+                <p className="text-[11px] text-muted-foreground">Email cannot be changed.</p>
               </div>
             </div>
 

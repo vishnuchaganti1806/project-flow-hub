@@ -10,6 +10,8 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   avatar?: string;
+  mustChangePassword?: boolean;
+  isActive?: boolean;
 }
 
 interface AuthContextType {
@@ -18,7 +20,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -36,7 +37,7 @@ async function fetchUserRole(userId: string): Promise<UserRole> {
 async function fetchProfile(userId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("name, email, avatar")
+    .select("name, email, avatar, must_change_password, is_active")
     .eq("user_id", userId)
     .maybeSingle();
   return data;
@@ -53,6 +54,8 @@ async function buildAuthUser(user: User): Promise<AuthUser> {
     email: profile?.email || user.email || "",
     role,
     avatar: profile?.avatar || (profile?.name || "").split(" ").map((n: string) => n[0]).join(""),
+    mustChangePassword: profile?.must_change_password ?? false,
+    isActive: profile?.is_active ?? true,
   };
 }
 
@@ -62,11 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        // Use setTimeout to avoid Supabase client deadlock
         setTimeout(async () => {
           const authUser = await buildAuthUser(newSession.user);
           setUser(authUser);
@@ -78,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
       setSession(existingSession);
       if (existingSession?.user) {
@@ -98,33 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       throw new Error(error.message);
     }
-    // State update handled by onAuthStateChange
-  }, []);
-
-  const register = useCallback(async (name: string, email: string, password: string, role: string) => {
-    setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) {
-      setIsLoading(false);
-      throw new Error(error.message);
-    }
-    // Assign role
-    if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: role as UserRole });
-      // Create role-specific record
-      if (role === "student") {
-        await supabase.from("students").insert({ user_id: data.user.id });
-      } else if (role === "guide") {
-        await supabase.from("guides").insert({ user_id: data.user.id });
-      }
-    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -134,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, isAuthenticated: !!user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, session, isAuthenticated: !!user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

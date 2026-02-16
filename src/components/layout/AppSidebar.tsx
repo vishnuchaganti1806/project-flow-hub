@@ -1,13 +1,13 @@
 import {
   LayoutDashboard, Lightbulb, Users, MessageSquare, BarChart3,
-  UserCheck, ClipboardList, Star, Clock, Settings, BookOpen, User, FolderKanban,
+  UserCheck, ClipboardList, Star, Clock, BookOpen, User, FolderKanban, Shield, FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarHeader, SidebarFooter,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
 
 const studentMenu = [
@@ -33,15 +33,18 @@ const guideMenu = [
 
 const adminMenu = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "User Management", url: "/admin/users", icon: Shield },
   { title: "All Ideas", url: "/admin/ideas", icon: Lightbulb },
   { title: "Students", url: "/admin/students", icon: Users },
   { title: "Guides", url: "/admin/guides", icon: BookOpen },
   { title: "Teams", url: "/admin/teams", icon: FolderKanban },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Activity Logs", url: "/admin/activity-logs", icon: FileText },
 ];
 
 export function AppSidebar() {
-  const { role } = useRole();
+  const { user } = useAuth();
+  const role = user?.role || "student";
 
   const menu = role === "admin" ? adminMenu : role === "guide" ? guideMenu : studentMenu;
   const label = role === "admin" ? "Administration" : role === "guide" ? "Guide Portal" : "Student Portal";
@@ -86,16 +89,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4">
-        <NavLink
-          to="/settings"
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        >
-          <Settings className="h-4 w-4" />
-          <span>Settings</span>
-        </NavLink>
-      </SidebarFooter>
     </Sidebar>
   );
 }
