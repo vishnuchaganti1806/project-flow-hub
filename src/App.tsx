@@ -10,6 +10,8 @@ import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Public pages
+import PortalSelectionPage from "./pages/PortalSelectionPage";
 // Auth pages
 import RoleLoginPage from "./pages/auth/RoleLoginPage";
 const ChangePasswordPage = lazy(() => import("./pages/auth/ChangePasswordPage"));
@@ -82,8 +84,9 @@ const App = () => (
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Public login routes */}
-              <Route path="/login" element={<Navigate to="/student/login" replace />} />
+              {/* Public routes */}
+              <Route path="/" element={<PortalSelectionPage />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/student/login" element={<RoleLoginPage expectedRole="student" />} />
               <Route path="/guide/login" element={<RoleLoginPage expectedRole="guide" />} />
               <Route path="/admin/login" element={<RoleLoginPage expectedRole="admin" />} />
@@ -93,7 +96,7 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route path="/change-password" element={<ChangePasswordPage />} />
 
-                <Route path="/" element={<RoleRedirect />} />
+                <Route path="/dashboard" element={<RoleRedirect />} />
 
                 {/* Student routes */}
                 <Route element={<RoleProtectedRoute allowedRoles={["student"]} />}>
