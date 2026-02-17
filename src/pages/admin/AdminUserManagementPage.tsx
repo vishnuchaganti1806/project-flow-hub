@@ -23,6 +23,7 @@ interface ManagedUser {
   role: string;
   isActive: boolean;
   mustChangePassword: boolean;
+  loginId: string;
   createdAt: string;
 }
 
@@ -48,6 +49,7 @@ export default function AdminUserManagementPage() {
   // Create user form
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [newLoginId, setNewLoginId] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("student");
   const [formError, setFormError] = useState("");
@@ -61,12 +63,12 @@ export default function AdminUserManagementPage() {
   });
 
   const createUser = useMutation({
-    mutationFn: () => adminAction({ action: "create_user", email: newEmail, password: newPassword, name: newName, role: newRole }),
+    mutationFn: () => adminAction({ action: "create_user", email: newEmail, password: newPassword, name: newName, role: newRole, login_id: newLoginId }),
     onSuccess: () => {
       toast.success("User created successfully");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setCreateOpen(false);
-      setNewName(""); setNewEmail(""); setNewPassword(""); setNewRole("student"); setFormError("");
+      setNewName(""); setNewEmail(""); setNewLoginId(""); setNewPassword(""); setNewRole("student"); setFormError("");
     },
     onError: (err: Error) => setFormError(err.message),
   });
@@ -91,7 +93,7 @@ export default function AdminUserManagementPage() {
   });
 
   const filtered = (users || []).filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
+    u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()) || (u.loginId || "").toLowerCase().includes(search.toLowerCase())
   );
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
@@ -112,6 +114,7 @@ export default function AdminUserManagementPage() {
             <form onSubmit={(e) => { e.preventDefault(); createUser.mutate(); }} className="space-y-4">
               {formError && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertDescription>{formError}</AlertDescription></Alert>}
               <div className="space-y-2"><Label>Full Name</Label><Input value={newName} onChange={e => setNewName(e.target.value)} required /></div>
+              <div className="space-y-2"><Label>Login ID</Label><Input placeholder="e.g. STU001, GDE001" value={newLoginId} onChange={e => setNewLoginId(e.target.value)} required /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required /></div>
               <div className="space-y-2"><Label>Temporary Password</Label><Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} /></div>
               <div className="space-y-2">
@@ -157,7 +160,7 @@ export default function AdminUserManagementPage() {
                         <Badge variant={u.isActive ? "default" : "destructive"} className="text-[10px]">{u.isActive ? "Active" : "Inactive"}</Badge>
                         <Badge variant="secondary" className="text-[10px] capitalize">{u.role}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                      <p className="text-xs text-muted-foreground">{u.loginId ? `ID: ${u.loginId} · ` : ""}{u.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 ml-4">

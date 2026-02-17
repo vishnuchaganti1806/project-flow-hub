@@ -13,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Public pages
 import PortalSelectionPage from "./pages/PortalSelectionPage";
 // Auth pages
-import RoleLoginPage from "./pages/auth/RoleLoginPage";
 const ChangePasswordPage = lazy(() => import("./pages/auth/ChangePasswordPage"));
 const UnauthorizedPage = lazy(() => import("./pages/auth/UnauthorizedPage"));
 
@@ -70,7 +69,7 @@ function PageLoader() {
 
 function RoleRedirect() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/student/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   if (user.mustChangePassword) return <Navigate to="/change-password" replace />;
   return <Navigate to={`/${user.role}`} replace />;
 }
@@ -87,9 +86,9 @@ const App = () => (
               {/* Public routes */}
               <Route path="/" element={<PortalSelectionPage />} />
               <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="/student/login" element={<RoleLoginPage expectedRole="student" />} />
-              <Route path="/guide/login" element={<RoleLoginPage expectedRole="guide" />} />
-              <Route path="/admin/login" element={<RoleLoginPage expectedRole="admin" />} />
+              <Route path="/student/login" element={<Navigate to="/" replace />} />
+              <Route path="/guide/login" element={<Navigate to="/" replace />} />
+              <Route path="/admin/login" element={<Navigate to="/" replace />} />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
               {/* Force password change (authenticated but no role restriction) */}

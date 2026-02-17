@@ -31,10 +31,17 @@ Deno.serve(async (req) => {
 
     // CREATE USER
     if (action === "create_user") {
-      const { email, password, name, role } = body;
-      if (!email || !password || !name || !role) {
-        return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+      const { email, password, name, role, login_id } = body;
+      if (!email || !password || !name || !role || !login_id) {
+        return new Response(JSON.stringify({ error: "Missing fields (email, password, name, role, login_id required)" }), { status: 400, headers: corsHeaders });
       }
+
+      // Check login_id uniqueness
+      const { data: existing } = await adminClient.from("profiles").select("id").eq("login_id", login_id).maybeSingle();
+      if (existing) {
+        return new Response(JSON.stringify({ error: "Login ID already exists. Choose a different one." }), { status: 400, headers: corsHeaders });
+      }
+
       const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
         email,
         password,
@@ -45,8 +52,8 @@ Deno.serve(async (req) => {
 
       // Assign role
       await adminClient.from("user_roles").insert({ user_id: newUser.user!.id, role });
-      // Set must_change_password
-      await adminClient.from("profiles").update({ must_change_password: true }).eq("user_id", newUser.user!.id);
+      // Set must_change_password and login_id
+      await adminClient.from("profiles").update({ must_change_password: true, login_id }).eq("user_id", newUser.user!.id);
       // Create role-specific record
       if (role === "student") {
         await adminClient.from("students").insert({ user_id: newUser.user!.id });
@@ -54,7 +61,7 @@ Deno.serve(async (req) => {
         await adminClient.from("guides").insert({ user_id: newUser.user!.id });
       }
       // Log activity
-      await adminClient.from("activity_logs").insert({ user_id: caller.id, action: "create_user", details: `Created ${role}: ${email}` });
+      await adminClient.from("activity_logs").insert({ user_id: caller.id, action: "create_user", details: `Created ${role}: ${login_id} (${email})` });
 
       return new Response(JSON.stringify({ success: true, userId: newUser.user!.id }), { headers: corsHeaders });
     }
@@ -116,7 +123,7 @@ Deno.serve(async (req) => {
       if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: corsHeaders });
 
       const enriched = await Promise.all(users.map(async (u) => {
-        const { data: profile } = await adminClient.from("profiles").select("name, is_active, must_change_password").eq("user_id", u.id).maybeSingle();
+        const { data: profile } = await adminClient.from("profiles").select("name, is_active, must_change_password, login_id").eq("user_id", u.id).maybeSingle();
         const { data: roleRow } = await adminClient.from("user_roles").select("role").eq("user_id", u.id).maybeSingle();
         return {
           id: u.id,
@@ -125,6 +132,7 @@ Deno.serve(async (req) => {
           role: roleRow?.role || "student",
           isActive: profile?.is_active ?? true,
           mustChangePassword: profile?.must_change_password ?? false,
+          loginId: profile?.login_id || "",
           createdAt: u.created_at,
         };
       }));
