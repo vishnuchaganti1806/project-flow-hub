@@ -51,6 +51,11 @@ export default function AdminGuidesPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>{g.assignedStudents} students assigned</span>
+                  {g.assignedStudents > 0 ? (
+                    <Badge variant="default" className="text-[10px] ml-auto">Active</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="text-[10px] ml-auto">No Students</Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>

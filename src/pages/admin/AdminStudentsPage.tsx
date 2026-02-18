@@ -7,20 +7,65 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStudents } from "@/hooks/useStudents";
 import { useGuides } from "@/hooks/useGuides";
-import { useToast } from "@/hooks/use-toast";
-import { Search, Users, UserCheck } from "lucide-react";
+import { Search, Users, UserCheck, UserX } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { Student } from "@/data/mockData";
+
+function useAssignStudentToGuide() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ studentId, guideId }: { studentId: string; guideId: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("admin-manage-users", {
+        body: { action: "assign_student", studentId, guideId },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Student assigned to guide successfully");
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to assign student"),
+  });
+}
+
+function useUnassignStudent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (studentId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("admin-manage-users", {
+        body: { action: "unassign_student", studentId },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Student unassigned from guide");
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to unassign student"),
+  });
+}
 
 export default function AdminStudentsPage() {
   const { data: students, isLoading } = useStudents();
   const { data: guides } = useGuides();
-  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [assignDialogStudent, setAssignDialogStudent] = useState<Student | null>(null);
   const [selectedGuide, setSelectedGuide] = useState("");
+  const assignMutation = useAssignStudentToGuide();
+  const unassignMutation = useUnassignStudent();
 
   const allSkills = [...new Set((students ?? []).flatMap((s) => s.skills))];
   const filtered = (students ?? [])
@@ -28,10 +73,18 @@ export default function AdminStudentsPage() {
     .filter((s) => !skillFilter || s.skills.includes(skillFilter));
 
   const handleAssign = () => {
-    if (!selectedGuide) return;
-    toast({ title: "Student Assigned", description: `Student assigned to guide successfully.` });
-    setAssignDialogStudent(null);
-    setSelectedGuide("");
+    if (!selectedGuide || !assignDialogStudent) return;
+    // We need to send guide's user_id, not guide table id
+    const guide = guides?.find(g => g.id === selectedGuide);
+    if (!guide) return;
+    assignMutation.mutate(
+      { studentId: assignDialogStudent.id, guideId: guide.userId },
+      { onSuccess: () => { setAssignDialogStudent(null); setSelectedGuide(""); } }
+    );
+  };
+
+  const handleUnassign = (student: Student) => {
+    unassignMutation.mutate(student.id);
   };
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
@@ -84,11 +137,22 @@ export default function AdminStudentsPage() {
                 <div className="flex items-center gap-3 ml-4">
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">Guide</p>
-                    <p className="text-sm font-medium">{s.guideName ?? "Unassigned"}</p>
+                    {s.guideName ? (
+                      <Badge variant="default" className="text-xs">{s.guideName}</Badge>
+                    ) : (
+                      <Badge variant="destructive" className="text-xs">Not Assigned</Badge>
+                    )}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setAssignDialogStudent(s)}>
-                    <UserCheck className="mr-1 h-3.5 w-3.5" /> Assign
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm" onClick={() => setAssignDialogStudent(s)}>
+                      <UserCheck className="mr-1 h-3.5 w-3.5" /> {s.guideName ? "Reassign" : "Assign"}
+                    </Button>
+                    {s.guideName && (
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleUnassign(s)}>
+                        <UserX className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -103,11 +167,11 @@ export default function AdminStudentsPage() {
             <Select value={selectedGuide} onValueChange={setSelectedGuide}>
               <SelectTrigger><SelectValue placeholder="Select a guide" /></SelectTrigger>
               <SelectContent>
-                {guides?.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} — {g.department}</SelectItem>)}
+                {guides?.map((g) => <SelectItem key={g.id} value={g.id}>{g.name} — {g.department || "No dept"}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Button onClick={handleAssign} className="w-full" disabled={!selectedGuide}>
-              <UserCheck className="mr-2 h-4 w-4" /> Assign Guide
+            <Button onClick={handleAssign} className="w-full" disabled={!selectedGuide || assignMutation.isPending}>
+              <UserCheck className="mr-2 h-4 w-4" /> {assignMutation.isPending ? "Assigning..." : "Assign Guide"}
             </Button>
           </div>
         </DialogContent>

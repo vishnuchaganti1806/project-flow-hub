@@ -5,10 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { useStudents } from "@/hooks/useStudents";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Star, Eye, Users } from "lucide-react";
+import { Search, Star, Users, UserCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Student } from "@/data/mockData";
 
@@ -25,9 +24,15 @@ export default function GuideStudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Assigned Students</h1>
-        <p className="text-muted-foreground">View and manage your assigned students.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Assigned Students</h1>
+          <p className="text-muted-foreground">View and manage your assigned students.</p>
+        </div>
+        <Badge variant="secondary" className="text-sm">
+          <UserCheck className="mr-1 h-3.5 w-3.5" />
+          {myStudents.length} Assigned
+        </Badge>
       </div>
 
       <div className="relative max-w-md">
@@ -39,7 +44,9 @@ export default function GuideStudentsPage() {
         <Card className="animate-fade-in">
           <CardContent className="flex flex-col items-center py-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground/40 mb-3" />
-            <p className="font-medium text-muted-foreground">No students found</p>
+            <p className="font-medium text-muted-foreground">
+              {myStudents.length === 0 ? "No students assigned to you yet" : "No matching students"}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -55,6 +62,7 @@ export default function GuideStudentsPage() {
                     <p className="font-medium truncate">{s.name}</p>
                     <p className="text-xs text-muted-foreground">{s.email}</p>
                   </div>
+                  <Badge variant="default" className="text-[10px]">Assigned</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {s.skills.map((sk) => <Badge key={sk} variant="secondary" className="text-[10px]">{sk}</Badge>)}
@@ -66,7 +74,7 @@ export default function GuideStudentsPage() {
                   </div>
                   <Progress value={s.progress} className="h-1.5" />
                 </div>
-                {s.rating && (
+                {s.rating != null && (
                   <div className="flex items-center gap-1 text-sm">
                     <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                     <span className="font-medium">{s.rating}</span>
@@ -102,7 +110,7 @@ export default function GuideStudentsPage() {
                   <Progress value={selected.progress} className="h-2" />
                   <p className="text-xs text-muted-foreground text-right mt-1">{selected.progress}%</p>
                 </div>
-                {selected.rating && (
+                {selected.rating != null && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1">Current Rating</p>
                     <div className="flex items-center gap-1">

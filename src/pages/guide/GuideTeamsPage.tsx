@@ -5,39 +5,53 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useTeams } from "@/hooks/useTeams";
 import { useStudents } from "@/hooks/useStudents";
-import { Users, FolderKanban } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Users, FolderKanban, UserCheck } from "lucide-react";
 
 export default function GuideTeamsPage() {
+  const { user } = useAuth();
   const { data: teams, isLoading: teamsLoading } = useTeams();
   const { data: students, isLoading: studentsLoading } = useStudents();
+
+  // Only show teams assigned to this guide
+  const myTeams = (teams ?? []).filter(t => t.guide_id === user?.id);
 
   if (teamsLoading || studentsLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Team Overview</h1>
-        <p className="text-muted-foreground">View teams and track their project progress.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">My Teams</h1>
+          <p className="text-muted-foreground">View teams assigned to you and track their progress.</p>
+        </div>
+        <Badge variant="secondary" className="text-sm">
+          <UserCheck className="mr-1 h-3.5 w-3.5" />
+          {myTeams.length} Teams
+        </Badge>
       </div>
 
-      {!teams?.length ? (
+      {!myTeams.length ? (
         <Card className="animate-fade-in">
           <CardContent className="flex flex-col items-center py-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground/40 mb-3" />
-            <p className="font-medium text-muted-foreground">No teams assigned</p>
+            <p className="font-medium text-muted-foreground">No teams assigned to you yet</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          {teams.map((team) => {
-            const members = students?.filter((s) => team.members.includes(s.id)) ?? [];
+          {myTeams.map((team) => {
+            const members = students?.filter((s) => team.members.includes(s.userId)) ?? [];
             const avgProgress = members.length > 0 ? Math.round(members.reduce((sum, m) => sum + m.progress, 0) / members.length) : 0;
             return (
               <Card key={team.id} className="animate-fade-in">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2"><FolderKanban className="h-4 w-4" /> {team.name}</CardTitle>
-                    <Badge variant="secondary">{members.length} members</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="text-xs">Assigned to you</Badge>
+                      <Badge variant="secondary">{members.length} members</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">

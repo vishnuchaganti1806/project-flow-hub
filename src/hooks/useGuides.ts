@@ -4,6 +4,8 @@ import type { Guide } from "@/data/mockData";
 
 async function mapGuide(row: any): Promise<Guide> {
   const { data: profile } = await supabase.from("profiles").select("name, email, avatar").eq("user_id", row.user_id).maybeSingle();
+  // Count students assigned to this guide (by user_id)
+  const { count } = await supabase.from("students").select("id", { count: "exact", head: true }).eq("guide_id", row.user_id);
   return {
     id: row.id,
     userId: row.user_id,
@@ -12,7 +14,7 @@ async function mapGuide(row: any): Promise<Guide> {
     avatar: profile?.avatar || (profile?.name || "").split(" ").map((n: string) => n[0]).join(""),
     department: row.department || "",
     specialization: row.specialization ? [row.specialization] : [],
-    assignedStudents: row.assigned_teams?.length || 0,
+    assignedStudents: count || 0,
   };
 }
 

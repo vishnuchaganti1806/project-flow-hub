@@ -50,11 +50,12 @@ export function useAssignGuideToTeam() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ teamId, guideId }: { teamId: string; guideId: string }) => {
+      // guideId here should be the guide's user_id
       const { data, error } = await supabase.from("teams").update({ guide_id: guideId }).eq("id", teamId).select().single();
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["teams"] }); toast.success("Guide assigned"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["teams"] }); toast.success("Guide assigned to team"); },
     onError: () => toast.error("Failed to assign guide"),
   });
 }
