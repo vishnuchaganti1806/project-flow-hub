@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -116,7 +117,7 @@ export default function AdminUserManagementPage() {
               <div className="space-y-2"><Label>Full Name</Label><Input value={newName} onChange={e => setNewName(e.target.value)} required /></div>
               <div className="space-y-2"><Label>Login ID</Label><Input placeholder="e.g. STU001, GDE001" value={newLoginId} onChange={e => setNewLoginId(e.target.value)} required /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required /></div>
-              <div className="space-y-2"><Label>Temporary Password</Label><Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} /></div>
+              <div className="space-y-2"><Label>Temporary Password</Label><PasswordInput value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} /></div>
               <div className="space-y-2">
                 <Label>Role</Label>
                 <Select value={newRole} onValueChange={setNewRole}>
@@ -186,7 +187,7 @@ export default function AdminUserManagementPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Reset Password for {resetOpen?.name || resetOpen?.email}</DialogTitle></DialogHeader>
           <form onSubmit={e => { e.preventDefault(); resetPassword.mutate(); }} className="space-y-4">
-            <div className="space-y-2"><Label>New Password</Label><Input type="password" value={resetPw} onChange={e => setResetPw(e.target.value)} required minLength={6} /></div>
+            <div className="space-y-2"><Label>New Password</Label><PasswordInput value={resetPw} onChange={e => setResetPw(e.target.value)} required minLength={6} /></div>
             <Button type="submit" className="w-full" disabled={resetPassword.isPending}>
               {resetPassword.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
               Reset Password
