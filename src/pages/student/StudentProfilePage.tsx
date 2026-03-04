@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,21 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useStudentProfile } from "@/hooks/useStudents";
-import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { useStudentProfile, useUpdateStudentProfile } from "@/hooks/useStudents";
 import { Camera, X, Plus, Save, Loader2 } from "lucide-react";
 
 export default function StudentProfilePage() {
   const { data: student, isLoading } = useStudentProfile();
-  const { toast } = useToast();
+  const updateProfile = useUpdateStudentProfile();
+
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
-  const [languages, setLanguages] = useState<string[]>(["JavaScript", "Python"]);
+  const [languages, setLanguages] = useState<string[]>([]);
   const [newLang, setNewLang] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+
+  // Sync form when student data loads
+  useEffect(() => {
+    if (student) {
+      setName(student.name || "");
+      setBio((student as any).bio || "");
+      setSkills([...(student.skills || [])]);
+      setLanguages([...(student.languages || [])]);
+    }
+  }, [student]);
 
   if (isLoading) {
     return (
@@ -31,20 +40,12 @@ export default function StudentProfilePage() {
     );
   }
 
-  if (!initialized && student) {
-    setName(student.name || "");
-    setEmail(student.email || "");
-    setSkills([...(student.skills || [])]);
-    setInitialized(true);
-  }
-
   const addSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
       setSkills([...skills, newSkill.trim()]);
       setNewSkill("");
     }
   };
-
   const removeSkill = (s: string) => setSkills(skills.filter((sk) => sk !== s));
 
   const addLanguage = () => {
@@ -53,15 +54,10 @@ export default function StudentProfilePage() {
       setNewLang("");
     }
   };
-
   const removeLanguage = (l: string) => setLanguages(languages.filter((la) => la !== l));
 
-  const handleSave = async () => {
-    setSaving(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    toast({ title: "Profile Updated", description: "Your profile has been saved successfully." });
+  const handleSave = () => {
+    updateProfile.mutate({ name, bio, skills, languages });
   };
 
   return (
@@ -87,7 +83,7 @@ export default function StudentProfilePage() {
             </div>
             <div className="text-center">
               <p className="font-semibold">{name}</p>
-              <p className="text-sm text-muted-foreground">{email}</p>
+              <p className="text-sm text-muted-foreground">{student?.email}</p>
             </div>
             <Badge variant="secondary">Student</Badge>
             {student?.guideName && (
@@ -112,9 +108,21 @@ export default function StudentProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} disabled className="opacity-60" />
+                <Input id="email" type="email" value={student?.email || ""} disabled className="opacity-60" />
                 <p className="text-[11px] text-muted-foreground">Email cannot be changed.</p>
               </div>
+            </div>
+
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                placeholder="Tell us about yourself..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+              />
             </div>
 
             {/* Skills */}
@@ -172,8 +180,12 @@ export default function StudentProfilePage() {
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              <Button onClick={handleSave} disabled={updateProfile.isPending}>
+                {updateProfile.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
                 Save Changes
               </Button>
             </div>
