@@ -15,6 +15,7 @@ import {
   Loader2,
   ArrowRight,
 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 import { motion, AnimatePresence } from "framer-motion";
 import type { UserRole } from "@/contexts/AuthContext";
 
@@ -200,9 +201,8 @@ export default function PortalSelectionPage() {
                 <Label htmlFor="password" className="text-xs font-medium">
                   Password
                 </Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
