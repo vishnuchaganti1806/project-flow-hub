@@ -23,6 +23,7 @@ export interface Student {
   userId: string;
   name: string;
   email: string;
+  bio?: string;
   avatar: string;
   skills: string[];
   languages?: string[];
