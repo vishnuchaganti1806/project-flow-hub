@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
           const userId = newUser.user!.id;
           await adminClient.from("user_roles").insert({ user_id: userId, role });
-          await adminClient.from("profiles").update({ must_change_password: true, login_id }).eq("user_id", userId);
+          await adminClient.from("profiles").update({ must_change_password: false, login_id }).eq("user_id", userId);
 
           if (role === "student") {
             await adminClient.from("students").insert({ user_id: userId });
