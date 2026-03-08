@@ -1,4 +1,4 @@
-import { Bell, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,9 +7,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/hooks/useNotifications";
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+} from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const typeStyles: Record<string, string> = {
   success: "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]",
@@ -22,8 +29,12 @@ export function NotificationDropdown() {
   const { data: notifications } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const deleteOne = useDeleteNotification();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const unread = notifications?.filter((n) => !n.read).length ?? 0;
+  const recent = (notifications || []).slice(0, 8);
 
   return (
     <Popover>
@@ -53,11 +64,11 @@ export function NotificationDropdown() {
           )}
         </div>
         <ScrollArea className="max-h-72">
-          {(!notifications || notifications.length === 0) ? (
+          {recent.length === 0 ? (
             <p className="p-6 text-center text-sm text-muted-foreground">No notifications</p>
           ) : (
             <div className="divide-y">
-              {notifications.map((n) => (
+              {recent.map((n) => (
                 <div
                   key={n.id}
                   className={cn(
@@ -78,21 +89,38 @@ export function NotificationDropdown() {
                     <p className="text-sm font-medium leading-tight">{n.title}</p>
                     <p className="text-xs text-muted-foreground">{n.message}</p>
                   </div>
-                  {!n.read && (
+                  <div className="flex flex-col gap-1 shrink-0">
+                    {!n.read && (
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => markRead.mutate(n.id)}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={() => markRead.mutate(n.id)}
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteOne.mutate(n.id)}
                     >
-                      <Check className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3" />
                     </Button>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </ScrollArea>
+        {(notifications?.length ?? 0) > 0 && (
+          <div className="border-t px-4 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => navigate(`/${user?.role || "student"}/notifications`)}
+            >
+              View all notifications
+            </Button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

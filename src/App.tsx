@@ -46,6 +46,7 @@ const AdminActivityLogsPage = lazy(() => import("./pages/admin/AdminActivityLogs
 const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,6 +112,7 @@ const App = () => (
                     <Route path="/student/doubts" element={<StudentDoubtsPage />} />
                     <Route path="/student/deadlines" element={<StudentDeadlinesPage />} />
                     <Route path="/student/reviews" element={<StudentReviewsPage />} />
+                    <Route path="/student/notifications" element={<NotificationsPage />} />
                   </Route>
                 </Route>
 
@@ -124,6 +126,7 @@ const App = () => (
                     <Route path="/guide/doubts" element={<GuideDoubtsPage />} />
                     <Route path="/guide/deadlines" element={<GuideDeadlinesPage />} />
                     <Route path="/guide/ratings" element={<GuideRatingsPage />} />
+                    <Route path="/guide/notifications" element={<NotificationsPage />} />
                   </Route>
                 </Route>
 
@@ -139,6 +142,7 @@ const App = () => (
                     <Route path="/admin/teams" element={<AdminTeamsPage />} />
                     <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                     <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />
+                    <Route path="/admin/notifications" element={<NotificationsPage />} />
                   </Route>
                 </Route>
               </Route>
