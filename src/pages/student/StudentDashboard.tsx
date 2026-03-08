@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useStudents, useStudentProfile } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
-import { useNotifications, useMarkAsRead } from "@/hooks/useNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useDeadlines, useDeleteDeadline } from "@/hooks/useDeadlines";
 import { useTeams } from "@/hooks/useTeams";
 import { useReviews } from "@/hooks/useReviews";
