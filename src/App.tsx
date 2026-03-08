@@ -131,6 +131,7 @@ const App = () => (
                 <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/profile" element={<AdminProfilePage />} />
                     <Route path="/admin/users" element={<AdminUserManagementPage />} />
                     <Route path="/admin/ideas" element={<AdminIdeasPage />} />
                     <Route path="/admin/students" element={<AdminStudentsPage />} />
