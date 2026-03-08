@@ -45,6 +45,7 @@ export type Database = {
           date: string
           id: string
           project_id: string | null
+          team_id: string | null
           title: string
         }
         Insert: {
@@ -53,6 +54,7 @@ export type Database = {
           date: string
           id?: string
           project_id?: string | null
+          team_id?: string | null
           title: string
         }
         Update: {
@@ -61,9 +63,18 @@ export type Database = {
           date?: string
           id?: string
           project_id?: string | null
+          team_id?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deadlines_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       doubts: {
         Row: {
@@ -325,6 +336,38 @@ export type Database = {
           year?: string | null
         }
         Relationships: []
+      }
+      team_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {
