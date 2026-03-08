@@ -32,6 +32,7 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
   const { data: students } = useStudents();
   const { data: ideas } = useIdeas();
   const { data: allDeadlines } = useDeadlines();
+  const { data: reviews } = useReviews();
   const createDeadline = useCreateDeadline();
   const { data: messages, isLoading: messagesLoading } = useTeamMessages(team.id);
   const sendMessage = useSendTeamMessage();
