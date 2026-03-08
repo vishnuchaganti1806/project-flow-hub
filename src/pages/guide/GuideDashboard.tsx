@@ -15,9 +15,11 @@ export default function GuideDashboard() {
   const { user } = useAuth();
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: ideas, isLoading: ideasLoading } = useIdeas();
+  const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines();
 
   const myStudents = students?.filter((s) => s.guideId === user?.id) ?? [];
   const ideasForReview = ideas?.filter((i) => myStudents.some((s) => s.userId === i.studentId)) ?? [];
+  const upcomingDeadlines = (deadlines ?? []).filter((d) => !isPast(new Date(d.date)));
 
   const guideName = user?.name ?? "Guide";
 
