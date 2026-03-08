@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useDoubts, useCreateDoubt, useReplyToDoubt } from "@/hooks/useDoubts";
+import { useDoubts, useCreateDoubt, useReplyToDoubt, useEditReply, useDeleteReply } from "@/hooks/useDoubts";
 import { useStudentProfile } from "@/hooks/useStudents";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Send, Plus, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Send, Plus, CheckCircle2, Pencil, Trash2, X, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
 
@@ -18,6 +18,8 @@ export default function StudentDoubtsPage() {
   const { data: doubts, isLoading } = useDoubts();
   const createDoubt = useCreateDoubt();
   const replyToDoubt = useReplyToDoubt();
+  const editReply = useEditReply();
+  const deleteReply = useDeleteReply();
   const { toast } = useToast();
 
   const [newSubject, setNewSubject] = useState("");
@@ -25,6 +27,8 @@ export default function StudentDoubtsPage() {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingMsg, setEditingMsg] = useState<{ doubtId: string; index: number } | null>(null);
+  const [editText, setEditText] = useState("");
 
   const myDoubts = doubts?.filter((d) => d.studentId === student?.userId) ?? [];
 
@@ -49,6 +53,22 @@ export default function StudentDoubtsPage() {
         setReplyText({ ...replyText, [doubtId]: "" });
       },
     });
+  };
+
+  const handleEdit = (doubtId: string, index: number, currentText: string) => {
+    setEditingMsg({ doubtId, index });
+    setEditText(currentText);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingMsg || !editText.trim()) return;
+    editReply.mutate({ doubtId: editingMsg.doubtId, replyIndex: editingMsg.index, newText: editText.trim() }, {
+      onSuccess: () => setEditingMsg(null),
+    });
+  };
+
+  const handleDelete = (doubtId: string, index: number) => {
+    deleteReply.mutate({ doubtId, replyIndex: index });
   };
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
@@ -114,14 +134,49 @@ export default function StudentDoubtsPage() {
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {d.messages.map((m, i) => {
                       const isMe = m.sender === student?.name;
+                      const isEditing = editingMsg?.doubtId === d.id && editingMsg?.index === i;
                       return (
                         <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[80%] rounded-lg p-3 ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                          <div className={`max-w-[80%] rounded-lg p-3 ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"} group relative`}>
                             <p className="text-xs font-medium mb-1">{m.sender}</p>
-                            <p className="text-sm">{m.text}</p>
-                            <p className={`text-[10px] mt-1 ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                              {format(parseISO(m.timestamp), "MMM dd, h:mm a")}
-                            </p>
+                            {isEditing ? (
+                              <div className="space-y-2">
+                                <Input
+                                  value={editText}
+                                  onChange={(e) => setEditText(e.target.value)}
+                                  className="text-sm bg-background text-foreground"
+                                  onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
+                                />
+                                <div className="flex gap-1">
+                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveEdit} disabled={editReply.isPending}>
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingMsg(null)}>
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm">{m.text}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <p className={`text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                    {format(parseISO(m.timestamp), "MMM dd, h:mm a")}
+                                    {(m as any).edited && " · edited"}
+                                  </p>
+                                  {isMe && !d.resolved && (
+                                    <span className="ml-auto flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button size="icon" variant="ghost" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); handleEdit(d.id, i, m.text); }}>
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(d.id, i); }}>
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       );

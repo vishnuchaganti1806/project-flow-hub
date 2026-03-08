@@ -87,3 +87,38 @@ export function useResolveDoubt() {
     onError: () => toast.error("Failed to resolve doubt"),
   });
 }
+
+export function useEditReply() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ doubtId, replyIndex, newText }: { doubtId: string; replyIndex: number; newText: string }) => {
+      const { data: doubt, error: fetchErr } = await supabase.from("doubts").select("replies").eq("id", doubtId).single();
+      if (fetchErr) throw fetchErr;
+      const replies = Array.isArray(doubt?.replies) ? [...doubt.replies] : [];
+      if (replyIndex < 0 || replyIndex >= replies.length) throw new Error("Invalid index");
+      (replies[replyIndex] as any).text = newText;
+      (replies[replyIndex] as any).edited = true;
+      const { error } = await supabase.from("doubts").update({ replies: replies as Json }).eq("id", doubtId);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["doubts"] }); toast.success("Message edited"); },
+    onError: () => toast.error("Failed to edit message"),
+  });
+}
+
+export function useDeleteReply() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ doubtId, replyIndex }: { doubtId: string; replyIndex: number }) => {
+      const { data: doubt, error: fetchErr } = await supabase.from("doubts").select("replies").eq("id", doubtId).single();
+      if (fetchErr) throw fetchErr;
+      const replies = Array.isArray(doubt?.replies) ? [...doubt.replies] : [];
+      if (replyIndex < 0 || replyIndex >= replies.length) throw new Error("Invalid index");
+      replies.splice(replyIndex, 1);
+      const { error } = await supabase.from("doubts").update({ replies: replies as Json }).eq("id", doubtId);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["doubts"] }); toast.success("Message deleted"); },
+    onError: () => toast.error("Failed to delete message"),
+  });
+}
