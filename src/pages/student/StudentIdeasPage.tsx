@@ -109,6 +109,11 @@ export default function StudentIdeasPage() {
                   <Button asChild variant="ghost" size="icon" className="h-8 w-8">
                     <Link to={`/student/ideas/${idea.id}`}><Eye className="h-4 w-4" /></Link>
                   </Button>
+                  {idea.status === "draft" && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs gap-1 text-primary" onClick={() => handleSubmitForReview(idea.id)} disabled={updateStatus.isPending}>
+                      <Send className="h-3.5 w-3.5" /> Submit
+                    </Button>
+                  )}
                   {idea.status !== "approved" && (
                     <Button asChild variant="ghost" size="icon" className="h-8 w-8">
                       <Link to={`/student/ideas/${idea.id}/edit`}><Edit className="h-4 w-4" /></Link>
