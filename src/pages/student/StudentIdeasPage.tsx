@@ -8,7 +8,7 @@ import { useIdeas, useDeleteIdea, useUpdateIdeaStatus } from "@/hooks/useIdeas";
 import { useStudentProfile } from "@/hooks/useStudents";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Search, Plus, Trash2, Edit, Eye, Lightbulb } from "lucide-react";
+import { Search, Plus, Trash2, Edit, Eye, Lightbulb, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
