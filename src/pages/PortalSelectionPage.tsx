@@ -82,11 +82,6 @@ export default function PortalSelectionPage() {
         throw new Error(`Unauthorized. This login is for ${activeRole.label}s only.`);
       }
 
-      if (profileData?.must_change_password) {
-        navigate("/change-password", { replace: true });
-        return;
-      }
-
       navigate(`/${selectedRole}`, { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");

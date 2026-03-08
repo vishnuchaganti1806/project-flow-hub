@@ -34,6 +34,7 @@ const GuideTeamsPage = lazy(() => import("./pages/guide/GuideTeamsPage"));
 const GuideDoubtsPage = lazy(() => import("./pages/guide/GuideDoubtsPage"));
 const GuideDeadlinesPage = lazy(() => import("./pages/guide/GuideDeadlinesPage"));
 const GuideRatingsPage = lazy(() => import("./pages/guide/GuideRatingsPage"));
+const GuideProfilePage = lazy(() => import("./pages/guide/GuideProfilePage"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
@@ -120,6 +121,7 @@ const App = () => (
                 <Route element={<RoleProtectedRoute allowedRoles={["guide"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="/guide" element={<GuideDashboard />} />
+                    <Route path="/guide/profile" element={<GuideProfilePage />} />
                     <Route path="/guide/reviews" element={<GuideIdeaReviewPage />} />
                     <Route path="/guide/students" element={<GuideStudentsPage />} />
                     <Route path="/guide/teams" element={<GuideTeamsPage />} />

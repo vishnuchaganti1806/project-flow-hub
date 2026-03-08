@@ -66,12 +66,6 @@ export default function RoleLoginPage({ expectedRole }: Props) {
         throw new Error(`Unauthorized. This login is for ${config.label}s only.`);
       }
 
-      // Check if must change password
-      if (profile?.must_change_password) {
-        navigate("/change-password", { replace: true });
-        return;
-      }
-
       navigate(`/${expectedRole}`, { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");

@@ -17,10 +17,5 @@ export function RoleProtectedRoute({ allowedRoles }: Props) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Force password change redirect
-  if (user.mustChangePassword) {
-    return <Navigate to="/change-password" replace />;
-  }
-
   return <Outlet />;
 }

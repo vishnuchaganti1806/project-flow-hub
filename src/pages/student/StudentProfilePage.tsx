@@ -7,8 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useStudentProfile, useUpdateStudentProfile } from "@/hooks/useStudents";
-import { Camera, X, Plus, Save, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Camera, X, Plus, Save, Loader2, KeyRound, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function StudentProfilePage() {
   const { data: student, isLoading } = useStudentProfile();
@@ -21,7 +25,12 @@ export default function StudentProfilePage() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [newLang, setNewLang] = useState("");
 
-  // Sync form when student data loads
+  // Password change state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+
   useEffect(() => {
     if (student) {
       setName(student.name || "");
@@ -58,6 +67,25 @@ export default function StudentProfilePage() {
 
   const handleSave = () => {
     updateProfile.mutate({ name, bio, skills, languages });
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError("");
+    if (newPassword.length < 6) { setPwError("Password must be at least 6 characters"); return; }
+    if (newPassword !== confirmPassword) { setPwError("Passwords do not match"); return; }
+    setPwLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Password updated successfully");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setPwError(err.message || "Failed to update password");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   return (
@@ -113,16 +141,9 @@ export default function StudentProfilePage() {
               </div>
             </div>
 
-            {/* Bio */}
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Tell us about yourself..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={3}
-              />
+              <Textarea id="bio" placeholder="Tell us about yourself..." value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
             </div>
 
             {/* Skills */}
@@ -132,23 +153,13 @@ export default function StudentProfilePage() {
                 {skills.map((s) => (
                   <Badge key={s} variant="secondary" className="gap-1">
                     {s}
-                    <button onClick={() => removeSkill(s)} className="ml-0.5 hover:text-destructive">
-                      <X className="h-3 w-3" />
-                    </button>
+                    <button onClick={() => removeSkill(s)} className="ml-0.5 hover:text-destructive"><X className="h-3 w-3" /></button>
                   </Badge>
                 ))}
               </div>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Add a skill..."
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                  className="max-w-xs"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addSkill}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <Input placeholder="Add a skill..." value={newSkill} onChange={(e) => setNewSkill(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())} className="max-w-xs" />
+                <Button type="button" variant="outline" size="sm" onClick={addSkill}><Plus className="h-4 w-4" /></Button>
               </div>
             </div>
 
@@ -159,36 +170,50 @@ export default function StudentProfilePage() {
                 {languages.map((l) => (
                   <Badge key={l} className="gap-1 bg-primary/10 text-primary hover:bg-primary/20">
                     {l}
-                    <button onClick={() => removeLanguage(l)} className="ml-0.5 hover:text-destructive">
-                      <X className="h-3 w-3" />
-                    </button>
+                    <button onClick={() => removeLanguage(l)} className="ml-0.5 hover:text-destructive"><X className="h-3 w-3" /></button>
                   </Badge>
                 ))}
               </div>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Add a language..."
-                  value={newLang}
-                  onChange={(e) => setNewLang(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLanguage())}
-                  className="max-w-xs"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addLanguage}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <Input placeholder="Add a language..." value={newLang} onChange={(e) => setNewLang(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLanguage())} className="max-w-xs" />
+                <Button type="button" variant="outline" size="sm" onClick={addLanguage}><Plus className="h-4 w-4" /></Button>
               </div>
             </div>
 
             <div className="flex justify-end pt-2">
               <Button onClick={handleSave} disabled={updateProfile.isPending}>
-                {updateProfile.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
+                {updateProfile.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Save Changes
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Change Password Card */}
+        <Card className="animate-fade-in lg:col-span-3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <KeyRound className="h-4 w-4" /> Change Password
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+              {pwError && (
+                <Alert variant="destructive"><AlertDescription>{pwError}</AlertDescription></Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="new-pw">New Password</Label>
+                <PasswordInput id="new-pw" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-pw">Confirm Password</Label>
+                <PasswordInput id="confirm-pw" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} />
+              </div>
+              <Button type="submit" disabled={pwLoading}>
+                {pwLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                {pwLoading ? "Updating…" : "Update Password"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
