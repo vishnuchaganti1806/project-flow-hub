@@ -7,7 +7,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStudents } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useDeadlines } from "@/hooks/useDeadlines";
 import { useAuth } from "@/contexts/AuthContext";
+import { format, isPast } from "date-fns";
 
 export default function GuideDashboard() {
   const { user } = useAuth();
