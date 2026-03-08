@@ -66,6 +66,132 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, userId: newUser.user!.id }), { headers: corsHeaders });
     }
 
+    // BULK IMPORT
+    if (action === "bulk_import") {
+      const { rows } = body as { rows: Array<{ name: string; email: string; login_id: string; password: string; role: string; team_name?: string; guide_login_id?: string }> };
+      if (!rows || !Array.isArray(rows) || rows.length === 0) {
+        return new Response(JSON.stringify({ error: "No rows provided" }), { status: 400, headers: corsHeaders });
+      }
+
+      const results: Array<{ login_id: string; status: string; error?: string }> = [];
+      // Map login_id -> user_id for guide assignment
+      const loginIdToUserId: Record<string, string> = {};
+      // Map team_name -> member user_ids
+      const teamMap: Record<string, string[]> = {};
+      // Map team_name -> guide_login_id
+      const teamGuideMap: Record<string, string> = {};
+
+      // First pass: load existing login_ids to avoid duplicates
+      const { data: existingProfiles } = await adminClient.from("profiles").select("login_id, user_id");
+      const existingLoginIds = new Set((existingProfiles || []).map(p => p.login_id));
+      for (const p of (existingProfiles || [])) {
+        if (p.login_id) loginIdToUserId[p.login_id] = p.user_id;
+      }
+
+      // Sort rows: guides first so they exist before team assignment
+      const sorted = [...rows].sort((a, b) => {
+        if (a.role === "guide" && b.role !== "guide") return -1;
+        if (a.role !== "guide" && b.role === "guide") return 1;
+        return 0;
+      });
+
+      for (const row of sorted) {
+        const { name, email, login_id, password, role, team_name, guide_login_id } = row;
+        if (!name || !email || !login_id || !password || !role) {
+          results.push({ login_id: login_id || "?", status: "error", error: "Missing required fields" });
+          continue;
+        }
+        if (!["student", "guide"].includes(role)) {
+          results.push({ login_id, status: "error", error: "Role must be student or guide" });
+          continue;
+        }
+        if (existingLoginIds.has(login_id)) {
+          results.push({ login_id, status: "skipped", error: "Login ID already exists" });
+          // Still map it for team purposes
+          continue;
+        }
+
+        try {
+          const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { name },
+          });
+          if (createErr) {
+            results.push({ login_id, status: "error", error: createErr.message });
+            continue;
+          }
+
+          const userId = newUser.user!.id;
+          await adminClient.from("user_roles").insert({ user_id: userId, role });
+          await adminClient.from("profiles").update({ must_change_password: true, login_id }).eq("user_id", userId);
+
+          if (role === "student") {
+            await adminClient.from("students").insert({ user_id: userId });
+          } else if (role === "guide") {
+            await adminClient.from("guides").insert({ user_id: userId });
+          }
+
+          loginIdToUserId[login_id] = userId;
+          existingLoginIds.add(login_id);
+          results.push({ login_id, status: "created" });
+
+          // Track team membership for students
+          if (role === "student" && team_name && team_name.trim()) {
+            const tn = team_name.trim();
+            if (!teamMap[tn]) teamMap[tn] = [];
+            teamMap[tn].push(userId);
+            if (guide_login_id && guide_login_id.trim()) {
+              teamGuideMap[tn] = guide_login_id.trim();
+            }
+          }
+        } catch (e) {
+          results.push({ login_id, status: "error", error: String(e) });
+        }
+      }
+
+      // Create teams
+      const teamResults: Array<{ team: string; status: string; error?: string }> = [];
+      for (const [teamName, memberIds] of Object.entries(teamMap)) {
+        try {
+          const guideLoginId = teamGuideMap[teamName];
+          const guideUserId = guideLoginId ? loginIdToUserId[guideLoginId] || null : null;
+
+          const { data: team, error: teamErr } = await adminClient.from("teams").insert({
+            name: teamName,
+            members: memberIds,
+            guide_id: guideUserId,
+          }).select().single();
+
+          if (teamErr) {
+            teamResults.push({ team: teamName, status: "error", error: teamErr.message });
+            continue;
+          }
+
+          // Update students with team_id and guide_id
+          for (const mid of memberIds) {
+            await adminClient.from("students").update({
+              team_id: team.id,
+              guide_id: guideUserId,
+            }).eq("user_id", mid);
+          }
+
+          teamResults.push({ team: teamName, status: "created" });
+        } catch (e) {
+          teamResults.push({ team: teamName, status: "error", error: String(e) });
+        }
+      }
+
+      await adminClient.from("activity_logs").insert({
+        user_id: caller.id,
+        action: "bulk_import",
+        details: `Bulk imported ${results.filter(r => r.status === "created").length} users, ${teamResults.filter(r => r.status === "created").length} teams`,
+      });
+
+      return new Response(JSON.stringify({ success: true, users: results, teams: teamResults }), { headers: corsHeaders });
+    }
+
     // DEACTIVATE USER
     if (action === "deactivate_user") {
       const { userId } = body;
