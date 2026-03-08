@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
 
       // Assign role
       await adminClient.from("user_roles").insert({ user_id: newUser.user!.id, role });
-      // Set must_change_password and login_id
-      await adminClient.from("profiles").update({ must_change_password: true, login_id }).eq("user_id", newUser.user!.id);
+      // Set login_id
+      await adminClient.from("profiles").update({ must_change_password: false, login_id }).eq("user_id", newUser.user!.id);
       // Create role-specific record
       if (role === "student") {
         await adminClient.from("students").insert({ user_id: newUser.user!.id });
