@@ -53,7 +53,7 @@ export default function AdminDashboard() {
         <StatCard title="Teams" value={s.totalTeams} icon={UsersRound} />
         <StatCard title="Ideas" value={s.totalIdeas} icon={Lightbulb} />
         <StatCard title="Approved" value={s.approvedIdeas} icon={CheckCircle2} />
-        <StatCard title="Active Projects" value={s.activeProjects} icon={FolderKanban} />
+        <StatCard title="Active Projects" value={s.approvedIdeas} icon={FolderKanban} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
