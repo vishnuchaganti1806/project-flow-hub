@@ -17,10 +17,11 @@ import { useStudents } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useDeadlines, useCreateDeadline } from "@/hooks/useDeadlines";
 import { useTeamMessages, useSendTeamMessage } from "@/hooks/useTeamMessages";
+import { useReviews } from "@/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, FolderKanban, UserCheck, Calendar, Send,
-  FileText, Clock, ChevronRight, MessageSquare, Plus,
+  FileText, Clock, ChevronRight, MessageSquare, Plus, Star,
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import * as XLSX from "xlsx";
@@ -31,6 +32,7 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
   const { data: students } = useStudents();
   const { data: ideas } = useIdeas();
   const { data: allDeadlines } = useDeadlines();
+  const { data: reviews } = useReviews();
   const createDeadline = useCreateDeadline();
   const { data: messages, isLoading: messagesLoading } = useTeamMessages(team.id);
   const sendMessage = useSendTeamMessage();
@@ -48,6 +50,14 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
   const avgProgress = members.length > 0
     ? Math.round(members.reduce((sum, m) => sum + m.progress, 0) / members.length)
     : 0;
+
+  // Team rating from reviews
+  const getStudentAvgRating = (userId: string) => {
+    const sr = (reviews ?? []).filter((r) => r.studentId === userId);
+    return sr.length ? sr.reduce((s, r) => s + r.rating, 0) / sr.length : 0;
+  };
+  const memberRatings = members.map((m) => getStudentAvgRating(m.userId)).filter((r) => r > 0);
+  const teamAvgRating = memberRatings.length ? memberRatings.reduce((s, r) => s + r, 0) / memberRatings.length : 0;
 
   const handleCreateDeadline = () => {
     if (!newDeadlineTitle.trim() || !newDeadlineDate) return;
@@ -109,11 +119,12 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-5">
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{members.length}</p><p className="text-xs text-muted-foreground">Members</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{avgProgress}%</p><p className="text-xs text-muted-foreground">Avg Progress</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{teamIdeas.length}</p><p className="text-xs text-muted-foreground">Submissions</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{teamDeadlines.length}</p><p className="text-xs text-muted-foreground">Deadlines</p></CardContent></Card>
+        <Card><CardContent className="pt-4 text-center"><div className="flex items-center justify-center gap-1"><Star className={`h-5 w-5 ${teamAvgRating > 0 ? "fill-primary text-primary" : "text-muted-foreground/30"}`} /><p className="text-2xl font-bold">{teamAvgRating > 0 ? teamAvgRating.toFixed(1) : "—"}</p></div><p className="text-xs text-muted-foreground">Team Rating</p></CardContent></Card>
       </div>
 
       <Tabs defaultValue="members" className="space-y-4">
