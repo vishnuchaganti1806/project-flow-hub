@@ -17,10 +17,11 @@ import { useStudents } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useDeadlines, useCreateDeadline } from "@/hooks/useDeadlines";
 import { useTeamMessages, useSendTeamMessage } from "@/hooks/useTeamMessages";
+import { useReviews } from "@/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, FolderKanban, UserCheck, Calendar, Send,
-  FileText, Clock, ChevronRight, MessageSquare, Plus,
+  FileText, Clock, ChevronRight, MessageSquare, Plus, Star,
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import * as XLSX from "xlsx";
