@@ -28,13 +28,14 @@ export function useCreateDeadline() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (data: { title: string; date: string; projectId?: string }) => {
+    mutationFn: async (data: { title: string; date: string; projectId?: string; teamId?: string }) => {
       const { data: result, error } = await supabase.from("deadlines").insert({
         title: data.title,
         date: data.date,
         project_id: data.projectId || null,
+        team_id: data.teamId || null,
         created_by: user!.id,
-      }).select().single();
+      } as any).select().single();
       if (error) throw error;
       return result;
     },
