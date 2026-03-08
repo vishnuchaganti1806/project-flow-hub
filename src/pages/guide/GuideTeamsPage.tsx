@@ -51,6 +51,14 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
     ? Math.round(members.reduce((sum, m) => sum + m.progress, 0) / members.length)
     : 0;
 
+  // Team rating from reviews
+  const getStudentAvgRating = (userId: string) => {
+    const sr = (reviews ?? []).filter((r) => r.studentId === userId);
+    return sr.length ? sr.reduce((s, r) => s + r.rating, 0) / sr.length : 0;
+  };
+  const memberRatings = members.map((m) => getStudentAvgRating(m.userId)).filter((r) => r > 0);
+  const teamAvgRating = memberRatings.length ? memberRatings.reduce((s, r) => s + r, 0) / memberRatings.length : 0;
+
   const handleCreateDeadline = () => {
     if (!newDeadlineTitle.trim() || !newDeadlineDate) return;
     createDeadline.mutate(
