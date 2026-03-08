@@ -36,6 +36,12 @@ export default function StudentIdeasPage() {
     });
   };
 
+  const handleSubmitForReview = (id: string) => {
+    updateStatus.mutate({ id, status: "submitted" }, {
+      onSuccess: () => toast({ title: "Idea Submitted", description: "Your idea has been submitted for review." }),
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
