@@ -22,7 +22,7 @@ const studentMenu = [
 ];
 
 const guideMenu = [
-  { title: "Dashboard", url: "/guide", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/guide", icon: LayoutDashboard, end: true },
   { title: "My Profile", url: "/guide/profile", icon: User },
   { title: "Review Queue", url: "/guide/reviews", icon: ClipboardList },
   { title: "My Students", url: "/guide/students", icon: Users },
