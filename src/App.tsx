@@ -46,6 +46,7 @@ const AdminActivityLogsPage = lazy(() => import("./pages/admin/AdminActivityLogs
 const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
