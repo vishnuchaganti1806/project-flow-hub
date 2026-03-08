@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const { userId, newPassword } = body;
       const { error } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
       if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: corsHeaders });
-      await adminClient.from("profiles").update({ must_change_password: true }).eq("user_id", userId);
+      await adminClient.from("profiles").update({ must_change_password: false }).eq("user_id", userId);
       await adminClient.from("activity_logs").insert({ user_id: caller.id, action: "reset_password", details: `Reset password for ${userId}` });
       return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
     }
