@@ -20,6 +20,7 @@ export default function StudentIdeasPage() {
   const { data: student } = useStudentProfile();
   const { data: allIdeas, isLoading } = useIdeas();
   const deleteIdea = useDeleteIdea();
+  const updateStatus = useUpdateIdeaStatus();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
