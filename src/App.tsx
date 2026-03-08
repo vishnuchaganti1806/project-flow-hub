@@ -43,6 +43,7 @@ const AdminIdeasPage = lazy(() => import("./pages/admin/AdminIdeasPage"));
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
 const AdminUserManagementPage = lazy(() => import("./pages/admin/AdminUserManagementPage"));
 const AdminActivityLogsPage = lazy(() => import("./pages/admin/AdminActivityLogsPage"));
+const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -130,6 +131,7 @@ const App = () => (
                 <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/profile" element={<AdminProfilePage />} />
                     <Route path="/admin/users" element={<AdminUserManagementPage />} />
                     <Route path="/admin/ideas" element={<AdminIdeasPage />} />
                     <Route path="/admin/students" element={<AdminStudentsPage />} />

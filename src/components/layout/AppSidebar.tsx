@@ -33,6 +33,7 @@ const guideMenu = [
 
 const adminMenu = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "My Profile", url: "/admin/profile", icon: User },
   { title: "User Management", url: "/admin/users", icon: Shield },
   { title: "All Ideas", url: "/admin/ideas", icon: Lightbulb },
   { title: "Students", url: "/admin/students", icon: Users },
