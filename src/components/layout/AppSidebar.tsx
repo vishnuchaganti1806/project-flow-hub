@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/sidebar";
 
 const studentMenu = [
-  { title: "Dashboard", url: "/student", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/student", icon: LayoutDashboard, end: true },
   { title: "My Profile", url: "/student/profile", icon: User },
-  { title: "My Ideas", url: "/student/ideas", icon: Lightbulb },
+  { title: "My Ideas", url: "/student/ideas", icon: Lightbulb, end: true },
   { title: "Submit Idea", url: "/student/ideas/new", icon: ClipboardList },
   { title: "My Team", url: "/student/team", icon: Users },
   { title: "Doubts", url: "/student/doubts", icon: MessageSquare },
@@ -22,7 +22,7 @@ const studentMenu = [
 ];
 
 const guideMenu = [
-  { title: "Dashboard", url: "/guide", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/guide", icon: LayoutDashboard, end: true },
   { title: "My Profile", url: "/guide/profile", icon: User },
   { title: "Review Queue", url: "/guide/reviews", icon: ClipboardList },
   { title: "My Students", url: "/guide/students", icon: Users },
@@ -33,7 +33,7 @@ const guideMenu = [
 ];
 
 const adminMenu = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
   { title: "My Profile", url: "/admin/profile", icon: User },
   { title: "User Management", url: "/admin/users", icon: Shield },
   { title: "All Ideas", url: "/admin/ideas", icon: Lightbulb },
@@ -77,7 +77,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      end={item.url === `/${role}`}
+                      end={!!(item as any).end}
                       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
