@@ -23,7 +23,7 @@ export default function GuideDashboard() {
 
   const guideName = user?.name ?? "Guide";
 
-  if (studentsLoading || ideasLoading) {
+  if (studentsLoading || ideasLoading || deadlinesLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
