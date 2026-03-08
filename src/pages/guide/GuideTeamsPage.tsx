@@ -119,11 +119,12 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-5">
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{members.length}</p><p className="text-xs text-muted-foreground">Members</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{avgProgress}%</p><p className="text-xs text-muted-foreground">Avg Progress</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{teamIdeas.length}</p><p className="text-xs text-muted-foreground">Submissions</p></CardContent></Card>
         <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{teamDeadlines.length}</p><p className="text-xs text-muted-foreground">Deadlines</p></CardContent></Card>
+        <Card><CardContent className="pt-4 text-center"><div className="flex items-center justify-center gap-1"><Star className={`h-5 w-5 ${teamAvgRating > 0 ? "fill-primary text-primary" : "text-muted-foreground/30"}`} /><p className="text-2xl font-bold">{teamAvgRating > 0 ? teamAvgRating.toFixed(1) : "—"}</p></div><p className="text-xs text-muted-foreground">Team Rating</p></CardContent></Card>
       </div>
 
       <Tabs defaultValue="members" className="space-y-4">
