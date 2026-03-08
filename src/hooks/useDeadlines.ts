@@ -17,6 +17,7 @@ export function useDeadlines() {
         title: d.title,
         date: d.date,
         projectId: d.project_id || undefined,
+        teamId: (d as any).team_id || undefined,
       }));
     },
     staleTime: 30_000,
