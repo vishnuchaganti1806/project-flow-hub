@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/sidebar";
 
 const studentMenu = [
-  { title: "Dashboard", url: "/student", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/student", icon: LayoutDashboard, end: true },
   { title: "My Profile", url: "/student/profile", icon: User },
-  { title: "My Ideas", url: "/student/ideas", icon: Lightbulb },
+  { title: "My Ideas", url: "/student/ideas", icon: Lightbulb, end: true },
   { title: "Submit Idea", url: "/student/ideas/new", icon: ClipboardList },
   { title: "My Team", url: "/student/team", icon: Users },
   { title: "Doubts", url: "/student/doubts", icon: MessageSquare },
