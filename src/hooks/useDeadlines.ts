@@ -44,6 +44,21 @@ export function useCreateDeadline() {
   });
 }
 
+export function useUpdateDeadline() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, date }: { id: string; title?: string; date?: string }) => {
+      const update: Record<string, any> = {};
+      if (title !== undefined) update.title = title;
+      if (date !== undefined) update.date = date;
+      const { error } = await supabase.from("deadlines").update(update).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["deadlines"] }); toast.success("Deadline updated"); },
+    onError: () => toast.error("Failed to update deadline"),
+  });
+}
+
 export function useDeleteDeadline() {
   const qc = useQueryClient();
   return useMutation({
