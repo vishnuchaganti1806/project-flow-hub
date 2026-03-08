@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useIdeas, useDeleteIdea } from "@/hooks/useIdeas";
+import { useIdeas, useDeleteIdea, useUpdateIdeaStatus } from "@/hooks/useIdeas";
 import { useStudentProfile } from "@/hooks/useStudents";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
