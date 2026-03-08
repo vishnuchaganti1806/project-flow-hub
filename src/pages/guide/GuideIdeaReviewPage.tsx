@@ -28,7 +28,7 @@ export default function GuideIdeaReviewPage() {
   const [feedback, setFeedback] = useState("");
 
   const myStudents = students?.filter((s) => s.guideId === user?.id) ?? [];
-  const myIdeas = (ideas ?? []).filter((i) => myStudents.some((s) => s.userId === i.studentId));
+  const myIdeas = (ideas ?? []).filter((i) => i.status !== "draft" && myStudents.some((s) => s.userId === i.studentId));
 
   const filtered = myIdeas
     .filter((i) => statusFilter === "all" || i.status === statusFilter)
