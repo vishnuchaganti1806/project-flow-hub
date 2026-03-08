@@ -43,6 +43,7 @@ const AdminIdeasPage = lazy(() => import("./pages/admin/AdminIdeasPage"));
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
 const AdminUserManagementPage = lazy(() => import("./pages/admin/AdminUserManagementPage"));
 const AdminActivityLogsPage = lazy(() => import("./pages/admin/AdminActivityLogsPage"));
+const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
