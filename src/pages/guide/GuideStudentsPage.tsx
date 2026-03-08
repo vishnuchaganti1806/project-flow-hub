@@ -87,7 +87,7 @@ export default function GuideStudentsPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           {selected && (
             <>
               <DialogHeader><DialogTitle>Student Profile</DialogTitle></DialogHeader>
@@ -101,15 +101,63 @@ export default function GuideStudentsPage() {
                     <p className="text-sm text-muted-foreground">{selected.email}</p>
                   </div>
                 </div>
+
+                {selected.bio && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Bio</p>
+                    <p className="text-sm">{selected.bio}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  {selected.rollNumber && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-0.5">Roll Number</p>
+                      <p className="text-sm font-medium">{selected.rollNumber}</p>
+                    </div>
+                  )}
+                  {selected.branch && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-0.5">Branch</p>
+                      <p className="text-sm font-medium">{selected.branch}</p>
+                    </div>
+                  )}
+                  {selected.year && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-0.5">Year</p>
+                      <p className="text-sm font-medium">{selected.year}</p>
+                    </div>
+                  )}
+                  {selected.guideName && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-0.5">Guide</p>
+                      <p className="text-sm font-medium">{selected.guideName}</p>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Skills</p>
-                  <div className="flex flex-wrap gap-1.5">{selected.skills.map((s) => <Badge key={s} variant="secondary">{s}</Badge>)}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.skills.length > 0 ? selected.skills.map((s) => <Badge key={s} variant="secondary">{s}</Badge>) : <span className="text-sm text-muted-foreground">No skills listed</span>}
+                  </div>
                 </div>
+
+                {selected.languages && selected.languages.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Languages</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selected.languages.map((l) => <Badge key={l} variant="outline">{l}</Badge>)}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
                   <Progress value={selected.progress} className="h-2" />
                   <p className="text-xs text-muted-foreground text-right mt-1">{selected.progress}%</p>
                 </div>
+
                 {selected.rating != null && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1">Current Rating</p>
