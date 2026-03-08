@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useIdeas, useDeleteIdea } from "@/hooks/useIdeas";
+import { useIdeas, useDeleteIdea, useUpdateIdeaStatus } from "@/hooks/useIdeas";
 import { useStudentProfile } from "@/hooks/useStudents";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Search, Plus, Trash2, Edit, Eye, Lightbulb } from "lucide-react";
+import { Search, Plus, Trash2, Edit, Eye, Lightbulb, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -20,6 +20,7 @@ export default function StudentIdeasPage() {
   const { data: student } = useStudentProfile();
   const { data: allIdeas, isLoading } = useIdeas();
   const deleteIdea = useDeleteIdea();
+  const updateStatus = useUpdateIdeaStatus();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -32,6 +33,12 @@ export default function StudentIdeasPage() {
   const handleDelete = (id: string) => {
     deleteIdea.mutate(id, {
       onSuccess: () => toast({ title: "Idea Deleted", description: "Your draft idea has been removed." }),
+    });
+  };
+
+  const handleSubmitForReview = (id: string) => {
+    updateStatus.mutate({ id, status: "submitted" }, {
+      onSuccess: () => toast({ title: "Idea Submitted", description: "Your idea has been submitted for review." }),
     });
   };
 
@@ -102,6 +109,11 @@ export default function StudentIdeasPage() {
                   <Button asChild variant="ghost" size="icon" className="h-8 w-8">
                     <Link to={`/student/ideas/${idea.id}`}><Eye className="h-4 w-4" /></Link>
                   </Button>
+                  {idea.status === "draft" && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs gap-1 text-primary" onClick={() => handleSubmitForReview(idea.id)} disabled={updateStatus.isPending}>
+                      <Send className="h-3.5 w-3.5" /> Submit
+                    </Button>
+                  )}
                   {idea.status !== "approved" && (
                     <Button asChild variant="ghost" size="icon" className="h-8 w-8">
                       <Link to={`/student/ideas/${idea.id}/edit`}><Edit className="h-4 w-4" /></Link>
