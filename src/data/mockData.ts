@@ -90,4 +90,5 @@ export interface Deadline {
   title: string;
   date: string;
   projectId?: string;
+  teamId?: string;
 }
