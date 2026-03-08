@@ -7,19 +7,23 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStudents } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useDeadlines } from "@/hooks/useDeadlines";
 import { useAuth } from "@/contexts/AuthContext";
+import { format, isPast } from "date-fns";
 
 export default function GuideDashboard() {
   const { user } = useAuth();
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: ideas, isLoading: ideasLoading } = useIdeas();
+  const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines();
 
   const myStudents = students?.filter((s) => s.guideId === user?.id) ?? [];
   const ideasForReview = ideas?.filter((i) => myStudents.some((s) => s.userId === i.studentId)) ?? [];
+  const upcomingDeadlines = (deadlines ?? []).filter((d) => !isPast(new Date(d.date)));
 
   const guideName = user?.name ?? "Guide";
 
-  if (studentsLoading || ideasLoading) {
+  if (studentsLoading || ideasLoading || deadlinesLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -108,19 +112,20 @@ export default function GuideDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { title: "Milestone 2 Review", date: "Feb 15, 2026", count: "3 submissions" },
-              { title: "Mid-term Evaluation", date: "Feb 28, 2026", count: "All students" },
-              { title: "Final Project Review", date: "Mar 20, 2026", count: "All students" },
-            ].map((d, i) => (
-              <div key={i} className="rounded-lg border p-3">
-                <p className="text-sm font-medium">{d.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{d.date}</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{d.count}</Badge>
-              </div>
-            ))}
-          </div>
+          {upcomingDeadlines.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No upcoming deadlines.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {upcomingDeadlines.slice(0, 6).map((d) => (
+                <div key={d.id} className="rounded-lg border p-3">
+                  <p className="text-sm font-medium">{d.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(d.date), "MMM dd, yyyy")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
