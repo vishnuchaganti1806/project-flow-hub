@@ -151,25 +151,33 @@ export default function GuideIdeaReviewPage() {
                   <p className="text-sm">{selectedIdea.expectedOutcome}</p>
                 </div>
 
-                {(selectedIdea.status === "submitted" || selectedIdea.status === "under-review") && (
-                  <div className="space-y-3 border-t pt-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Feedback / Suggestions</p>
-                      <Textarea placeholder="Add feedback for the student..." rows={3} value={feedback} onChange={(e) => setFeedback(e.target.value)} />
+                <div className="space-y-3 border-t pt-4">
+                  {selectedIdea.guideFeedback && (
+                    <div className="rounded-md bg-muted p-3 mb-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Previous Feedback</p>
+                      <p className="text-sm">{selectedIdea.guideFeedback}</p>
                     </div>
-                    <div className="flex gap-2">
+                  )}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Feedback / Suggestions</p>
+                    <Textarea placeholder="Add feedback for the student..." rows={3} value={feedback} onChange={(e) => setFeedback(e.target.value)} />
+                  </div>
+                  <div className="flex gap-2">
+                    {selectedIdea.status !== "approved" && (
                       <Button className="flex-1 bg-status-approved hover:bg-status-approved/90 text-white" onClick={() => handleAction(selectedIdea.id, "approved")}>
                         <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
                       </Button>
-                      <Button variant="outline" className="flex-1" onClick={() => handleAction(selectedIdea.id, "under-review")}>
-                        <MessageSquare className="mr-2 h-4 w-4" /> Suggest Changes
-                      </Button>
+                    )}
+                    <Button variant="outline" className="flex-1" onClick={() => handleAction(selectedIdea.id, "under-review")}>
+                      <MessageSquare className="mr-2 h-4 w-4" /> {selectedIdea.status === "approved" || selectedIdea.status === "rejected" ? "Put On Hold" : "Suggest Changes"}
+                    </Button>
+                    {selectedIdea.status !== "rejected" && (
                       <Button variant="destructive" className="flex-1" onClick={() => handleAction(selectedIdea.id, "rejected")}>
                         <XCircle className="mr-2 h-4 w-4" /> Reject
                       </Button>
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </>
           )}
