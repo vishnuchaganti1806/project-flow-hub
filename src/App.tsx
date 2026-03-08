@@ -121,6 +121,7 @@ const App = () => (
                 <Route element={<RoleProtectedRoute allowedRoles={["guide"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="/guide" element={<GuideDashboard />} />
+                    <Route path="/guide/profile" element={<GuideProfilePage />} />
                     <Route path="/guide/reviews" element={<GuideIdeaReviewPage />} />
                     <Route path="/guide/students" element={<GuideStudentsPage />} />
                     <Route path="/guide/teams" element={<GuideTeamsPage />} />
