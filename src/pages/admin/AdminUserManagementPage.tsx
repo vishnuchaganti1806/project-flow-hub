@@ -207,7 +207,27 @@ export default function AdminUserManagementPage() {
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh]">
               <DialogHeader><DialogTitle>Bulk Import Users from Excel</DialogTitle></DialogHeader>
+              <ScrollArea className="max-h-[75vh] pr-2">
               <div className="space-y-4">
+                {/* Step 1: Upload prominently at the top */}
+                <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center bg-primary/5">
+                  <input type="file" accept=".xlsx,.xls,.csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <p className="text-sm font-semibold mb-1">Upload Your Excel File</p>
+                  <p className="text-xs text-muted-foreground mb-3">Supported formats: .xlsx, .xls, .csv</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Button onClick={() => fileInputRef.current?.click()} size="lg">
+                      <Upload className="mr-2 h-4 w-4" /> Choose File & Upload
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                      <Download className="mr-2 h-3 w-3" /> Download Template
+                    </Button>
+                  </div>
+                  {parsedRows.length > 0 && !importResults && (
+                    <p className="text-sm text-green-600 font-medium mt-3">✓ {parsedRows.length} rows parsed successfully from file</p>
+                  )}
+                </div>
+
                 {/* Instructions */}
                 <Alert>
                   <FileSpreadsheet className="h-4 w-4" />
@@ -218,12 +238,7 @@ export default function AdminUserManagementPage() {
 
                 {/* Template Preview */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-sm font-semibold">Excel Format (Template Preview)</Label>
-                    <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                      <Download className="mr-2 h-3 w-3" /> Download Template
-                    </Button>
-                  </div>
+                  <Label className="text-sm font-semibold mb-2 block">Excel Format (Template Preview)</Label>
                   <ScrollArea className="border rounded-md">
                     <Table>
                       <TableHeader>
@@ -257,21 +272,10 @@ export default function AdminUserManagementPage() {
                   </p>
                 </div>
 
-                {/* Upload */}
-                <div className="flex items-center gap-3">
-                  <input type="file" accept=".xlsx,.xls,.csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="mr-2 h-4 w-4" /> Upload Excel File
-                  </Button>
-                  {parsedRows.length > 0 && (
-                    <span className="text-sm text-muted-foreground">{parsedRows.length} rows parsed</span>
-                  )}
-                </div>
-
-                {/* Parsed Preview */}
+                {/* Parsed Preview & Import Button */}
                 {parsedRows.length > 0 && !importResults && (
                   <div>
-                    <Label className="text-sm font-semibold mb-2 block">Parsed Data Preview</Label>
+                    <Label className="text-sm font-semibold mb-2 block">Parsed Data Preview ({parsedRows.length} users)</Label>
                     <ScrollArea className="border rounded-md max-h-60">
                       <Table>
                         <TableHeader>
@@ -286,23 +290,47 @@ export default function AdminUserManagementPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {parsedRows.map((row, i) => (
-                            <TableRow key={i}>
-                              <TableCell className="text-xs">{i + 1}</TableCell>
-                              <TableCell className="text-xs">{row.name}</TableCell>
-                              <TableCell className="text-xs">{row.email}</TableCell>
-                              <TableCell className="text-xs font-mono">{row.login_id}</TableCell>
-                              <TableCell className="text-xs"><Badge variant={row.role === "guide" ? "secondary" : "default"} className="text-[10px]">{row.role}</Badge></TableCell>
-                              <TableCell className="text-xs">{row.team_name || "—"}</TableCell>
-                              <TableCell className="text-xs font-mono">{row.guide_login_id || "—"}</TableCell>
-                            </TableRow>
-                          ))}
+                          {parsedRows.map((row, i) => {
+                            const missing = !row.name || !row.email || !row.login_id || !row.password || !row.role;
+                            return (
+                              <TableRow key={i} className={missing ? "bg-destructive/10" : ""}>
+                                <TableCell className="text-xs">{i + 1}</TableCell>
+                                <TableCell className="text-xs">{row.name || <span className="text-destructive">Missing</span>}</TableCell>
+                                <TableCell className="text-xs">{row.email || <span className="text-destructive">Missing</span>}</TableCell>
+                                <TableCell className="text-xs font-mono">{row.login_id || <span className="text-destructive">Missing</span>}</TableCell>
+                                <TableCell className="text-xs">
+                                  {row.role ? (
+                                    <Badge variant={row.role === "guide" ? "secondary" : "default"} className="text-[10px]">{row.role}</Badge>
+                                  ) : <span className="text-destructive text-[10px]">Missing</span>}
+                                </TableCell>
+                                <TableCell className="text-xs">{row.team_name || "—"}</TableCell>
+                                <TableCell className="text-xs font-mono">{row.guide_login_id || "—"}</TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </ScrollArea>
-                    <Button className="w-full mt-3" onClick={() => bulkImport.mutate(parsedRows)} disabled={bulkImport.isPending}>
-                      {bulkImport.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                      Import {parsedRows.length} Users
+                    {parsedRows.some(r => !r.name || !r.email || !r.login_id || !r.password || !r.role) && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Some rows have missing required fields (highlighted in red). They will fail during import. Please fix and re-upload.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <Button className="w-full mt-3" size="lg" onClick={() => bulkImport.mutate(parsedRows)} disabled={bulkImport.isPending}>
+                      {bulkImport.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing... Please wait
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Import {parsedRows.length} Users Now
+                        </>
+                      )}
                     </Button>
                   </div>
                 )}
@@ -310,35 +338,67 @@ export default function AdminUserManagementPage() {
                 {/* Results */}
                 {importResults && (
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold block">Import Results</Label>
+                    {/* Summary */}
+                    {(() => {
+                      const created = (importResults.users || []).filter((r: any) => r.status === "created").length;
+                      const skipped = (importResults.users || []).filter((r: any) => r.status === "skipped").length;
+                      const errors = (importResults.users || []).filter((r: any) => r.status === "error").length;
+                      const teamsCreated = (importResults.teams || []).filter((r: any) => r.status === "created").length;
+                      const teamErrors = (importResults.teams || []).filter((r: any) => r.status === "error").length;
+                      return (
+                        <Alert variant={errors > 0 || teamErrors > 0 ? "destructive" : "default"} className={errors === 0 && teamErrors === 0 ? "border-green-500 bg-green-50 dark:bg-green-950/20" : ""}>
+                          {errors > 0 || teamErrors > 0 ? <AlertTriangle className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4 text-green-600" />}
+                          <AlertDescription>
+                            <p className="font-semibold">
+                              {errors === 0 && teamErrors === 0 ? "✅ Import Completed Successfully!" : "⚠️ Import Completed with Errors"}
+                            </p>
+                            <p className="text-sm mt-1">
+                              Users — Created: <strong>{created}</strong>
+                              {skipped > 0 && <>, Skipped: <strong>{skipped}</strong></>}
+                              {errors > 0 && <>, <span className="text-destructive">Errors: <strong>{errors}</strong></span></>}
+                              {(teamsCreated > 0 || teamErrors > 0) && (
+                                <> | Teams — Created: <strong>{teamsCreated}</strong>
+                                {teamErrors > 0 && <>, <span className="text-destructive">Errors: <strong>{teamErrors}</strong></span></>}
+                                </>
+                              )}
+                            </p>
+                            {errors > 0 && (
+                              <p className="text-xs mt-1 text-destructive">Fix the errors below, then re-upload the corrected file.</p>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    })()}
+
+                    <Label className="text-sm font-semibold block">Detailed Results</Label>
                     <ScrollArea className="border rounded-md max-h-48">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="text-xs">Login ID</TableHead>
+                            <TableHead className="text-xs">Login ID / Team</TableHead>
                             <TableHead className="text-xs">Status</TableHead>
                             <TableHead className="text-xs">Details</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {(importResults.users || []).map((r: any, i: number) => (
-                            <TableRow key={i}>
+                            <TableRow key={i} className={r.status === "error" ? "bg-destructive/10" : r.status === "created" ? "bg-green-50 dark:bg-green-950/10" : ""}>
                               <TableCell className="text-xs font-mono">{r.login_id}</TableCell>
                               <TableCell className="text-xs">
                                 <Badge variant={r.status === "created" ? "default" : r.status === "skipped" ? "secondary" : "destructive"} className="text-[10px]">
                                   {r.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">{r.error || "OK"}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{r.error || "✓ Created successfully"}</TableCell>
                             </TableRow>
                           ))}
                           {(importResults.teams || []).map((r: any, i: number) => (
-                            <TableRow key={`t-${i}`}>
+                            <TableRow key={`t-${i}`} className={r.status === "error" ? "bg-destructive/10" : "bg-green-50 dark:bg-green-950/10"}>
                               <TableCell className="text-xs font-mono">Team: {r.team}</TableCell>
                               <TableCell className="text-xs">
                                 <Badge variant={r.status === "created" ? "default" : "destructive"} className="text-[10px]">{r.status}</Badge>
                               </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">{r.error || "OK"}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{r.error || "✓ Team created"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -350,6 +410,7 @@ export default function AdminUserManagementPage() {
                   </div>
                 )}
               </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
 
