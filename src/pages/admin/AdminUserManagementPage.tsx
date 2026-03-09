@@ -43,11 +43,22 @@ interface ExcelRow {
 
 async function adminAction(body: Record<string, unknown>) {
   const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Session expired. Please log in again.");
+  }
   const res = await supabase.functions.invoke("admin-manage-users", {
     body,
-    headers: { Authorization: `Bearer ${session?.access_token}` },
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
-  if (res.error) throw new Error(res.error.message);
+  if (res.error) {
+    // Try to extract message from FunctionsHttpError
+    let msg = res.error.message || "Edge function error";
+    try {
+      const ctx = await (res.error as any).context?.json?.();
+      if (ctx?.error) msg = ctx.error;
+    } catch {}
+    throw new Error(msg);
+  }
   if (res.data?.error) throw new Error(res.data.error);
   return res.data;
 }
