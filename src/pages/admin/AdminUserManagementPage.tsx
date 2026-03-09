@@ -145,9 +145,16 @@ export default function AdminUserManagementPage() {
   const bulkImport = useMutation({
     mutationFn: (rows: ExcelRow[]) => adminAction({ action: "bulk_import", rows }),
     onSuccess: (data) => {
-      const createdCount = (data.users || []).filter((r: any) => r.status === "created").length;
+      const createdUsers = (data.users || []).filter((r: any) => r.status === "created");
+      const createdLoginIds = new Set(createdUsers.map((u: any) => u.login_id));
+      const studentsCreated = parsedRows.filter(r => r.role === "student" && createdLoginIds.has(r.login_id)).length;
+      const guidesCreated = parsedRows.filter(r => r.role === "guide" && createdLoginIds.has(r.login_id)).length;
       const teamCount = (data.teams || []).filter((r: any) => r.status === "created").length;
-      toast.success(`Imported ${createdCount} users and ${teamCount} teams`);
+      const parts = [];
+      if (studentsCreated > 0) parts.push(`${studentsCreated} student${studentsCreated !== 1 ? "s" : ""}`);
+      if (guidesCreated > 0) parts.push(`${guidesCreated} guide${guidesCreated !== 1 ? "s" : ""}`);
+      if (teamCount > 0) parts.push(`${teamCount} team${teamCount !== 1 ? "s" : ""}`);
+      toast.success(`Successfully created: ${parts.join(", ") || "0 users"}`);
       setImportResults(data);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["students"] });
