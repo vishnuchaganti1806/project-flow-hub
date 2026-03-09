@@ -145,9 +145,16 @@ export default function AdminUserManagementPage() {
   const bulkImport = useMutation({
     mutationFn: (rows: ExcelRow[]) => adminAction({ action: "bulk_import", rows }),
     onSuccess: (data) => {
-      const createdCount = (data.users || []).filter((r: any) => r.status === "created").length;
+      const createdUsers = (data.users || []).filter((r: any) => r.status === "created");
+      const createdLoginIds = new Set(createdUsers.map((u: any) => u.login_id));
+      const studentsCreated = parsedRows.filter(r => r.role === "student" && createdLoginIds.has(r.login_id)).length;
+      const guidesCreated = parsedRows.filter(r => r.role === "guide" && createdLoginIds.has(r.login_id)).length;
       const teamCount = (data.teams || []).filter((r: any) => r.status === "created").length;
-      toast.success(`Imported ${createdCount} users and ${teamCount} teams`);
+      const parts = [];
+      if (studentsCreated > 0) parts.push(`${studentsCreated} student${studentsCreated !== 1 ? "s" : ""}`);
+      if (guidesCreated > 0) parts.push(`${guidesCreated} guide${guidesCreated !== 1 ? "s" : ""}`);
+      if (teamCount > 0) parts.push(`${teamCount} team${teamCount !== 1 ? "s" : ""}`);
+      toast.success(`Successfully created: ${parts.join(", ") || "0 users"}`);
       setImportResults(data);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["students"] });
@@ -340,11 +347,17 @@ export default function AdminUserManagementPage() {
                   <div className="space-y-3">
                     {/* Summary */}
                     {(() => {
-                      const created = (importResults.users || []).filter((r: any) => r.status === "created").length;
+                      const createdUsers = (importResults.users || []).filter((r: any) => r.status === "created");
                       const skipped = (importResults.users || []).filter((r: any) => r.status === "skipped").length;
                       const errors = (importResults.users || []).filter((r: any) => r.status === "error").length;
                       const teamsCreated = (importResults.teams || []).filter((r: any) => r.status === "created").length;
                       const teamErrors = (importResults.teams || []).filter((r: any) => r.status === "error").length;
+
+                      // Count students and guides from parsed rows that were created
+                      const createdLoginIds = new Set(createdUsers.map((u: any) => u.login_id));
+                      const studentsCreated = parsedRows.filter(r => r.role === "student" && createdLoginIds.has(r.login_id)).length;
+                      const guidesCreated = parsedRows.filter(r => r.role === "guide" && createdLoginIds.has(r.login_id)).length;
+
                       return (
                         <Alert variant={errors > 0 || teamErrors > 0 ? "destructive" : "default"} className={errors === 0 && teamErrors === 0 ? "border-green-500 bg-green-50 dark:bg-green-950/20" : ""}>
                           {errors > 0 || teamErrors > 0 ? <AlertTriangle className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4 text-green-600" />}
@@ -352,16 +365,17 @@ export default function AdminUserManagementPage() {
                             <p className="font-semibold">
                               {errors === 0 && teamErrors === 0 ? "✅ Import Completed Successfully!" : "⚠️ Import Completed with Errors"}
                             </p>
-                            <p className="text-sm mt-1">
-                              Users — Created: <strong>{created}</strong>
-                              {skipped > 0 && <>, Skipped: <strong>{skipped}</strong></>}
-                              {errors > 0 && <>, <span className="text-destructive">Errors: <strong>{errors}</strong></span></>}
-                              {(teamsCreated > 0 || teamErrors > 0) && (
-                                <> | Teams — Created: <strong>{teamsCreated}</strong>
-                                {teamErrors > 0 && <>, <span className="text-destructive">Errors: <strong>{teamErrors}</strong></span></>}
-                                </>
-                              )}
-                            </p>
+                            <div className="text-sm mt-1 space-y-1">
+                              <p>
+                                ✅ <strong>{createdUsers.length}</strong> users created
+                                {studentsCreated > 0 && <> — <GraduationCap className="inline h-3.5 w-3.5 mx-0.5" /> <strong>{studentsCreated}</strong> student{studentsCreated !== 1 ? "s" : ""}</>}
+                                {guidesCreated > 0 && <>, <BookOpen className="inline h-3.5 w-3.5 mx-0.5" /> <strong>{guidesCreated}</strong> guide{guidesCreated !== 1 ? "s" : ""}</>}
+                              </p>
+                              {skipped > 0 && <p>⏭️ <strong>{skipped}</strong> skipped (already exist)</p>}
+                              {errors > 0 && <p className="text-destructive">❌ <strong>{errors}</strong> error{errors !== 1 ? "s" : ""} — fix and re-upload</p>}
+                              {teamsCreated > 0 && <p>🏷️ <strong>{teamsCreated}</strong> team{teamsCreated !== 1 ? "s" : ""} created</p>}
+                              {teamErrors > 0 && <p className="text-destructive">❌ <strong>{teamErrors}</strong> team error{teamErrors !== 1 ? "s" : ""}</p>}
+                            </div>
                             {errors > 0 && (
                               <p className="text-xs mt-1 text-destructive">Fix the errors below, then re-upload the corrected file.</p>
                             )}
