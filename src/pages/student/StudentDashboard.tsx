@@ -43,6 +43,25 @@ export default function StudentDashboard() {
   const { data: allStudents } = useStudents();
   const { data: reviews } = useReviews();
   const deleteDeadline = useDeleteDeadline();
+  const { data: doubts, isLoading: doubtsLoading } = useDoubts();
+  const createDoubt = useCreateDoubt();
+  const replyToDoubt = useReplyToDoubt();
+  const resolveDoubt = useResolveDoubt();
+  const updateDoubt = useUpdateDoubt();
+  const deleteDoubtMut = useDeleteDoubt();
+  const editReply = useEditReply();
+  const deleteReply = useDeleteReply();
+
+  // Doubt CRUD state
+  const [doubtDialogOpen, setDoubtDialogOpen] = useState(false);
+  const [newDoubtSubject, setNewDoubtSubject] = useState("");
+  const [newDoubtMessage, setNewDoubtMessage] = useState("");
+  const [expandedDoubtId, setExpandedDoubtId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [editingSubject, setEditingSubject] = useState<{ doubtId: string; subject: string } | null>(null);
+  const [deleteDoubtConfirm, setDeleteDoubtConfirm] = useState<string | null>(null);
+  const [editingMsg, setEditingMsg] = useState<{ doubtId: string; index: number } | null>(null);
+  const [editText, setEditText] = useState("");
 
   const myIdeas = allIdeas?.filter((i) => i.studentId === student?.userId) ?? [];
   const myTeam = teams?.find((t) => t.members.includes(student?.userId ?? ""));
