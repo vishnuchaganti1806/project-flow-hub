@@ -89,6 +89,34 @@ export default function StudentDashboard() {
   // Past deadlines
   const pastDeadlines = (deadlines ?? []).filter((d) => isPast(parseISO(d.date)));
 
+  // My doubts
+  const myDoubts = doubts?.filter((d) => d.studentId === student?.userId) ?? [];
+
+  const handlePostDoubt = () => {
+    if (!newDoubtSubject.trim() || !newDoubtMessage.trim()) return;
+    createDoubt.mutate({ subject: newDoubtSubject, guideId: student?.guideId ?? "", message: newDoubtMessage }, {
+      onSuccess: () => { setDoubtDialogOpen(false); setNewDoubtSubject(""); setNewDoubtMessage(""); },
+    });
+  };
+  const handleReply = (doubtId: string) => {
+    const text = replyText[doubtId];
+    if (!text?.trim()) return;
+    replyToDoubt.mutate({ doubtId, text }, { onSuccess: () => setReplyText({ ...replyText, [doubtId]: "" }) });
+  };
+  const handleSaveSubject = () => {
+    if (!editingSubject || !editingSubject.subject.trim()) return;
+    updateDoubt.mutate({ doubtId: editingSubject.doubtId, subject: editingSubject.subject.trim() }, { onSuccess: () => setEditingSubject(null) });
+  };
+  const handleDeleteDoubt = () => {
+    if (!deleteDoubtConfirm) return;
+    deleteDoubtMut.mutate(deleteDoubtConfirm, { onSuccess: () => { setDeleteDoubtConfirm(null); if (expandedDoubtId === deleteDoubtConfirm) setExpandedDoubtId(null); } });
+  };
+  const handleSaveEdit = () => {
+    if (!editingMsg || !editText.trim()) return;
+    editReply.mutate({ doubtId: editingMsg.doubtId, replyIndex: editingMsg.index, newText: editText.trim() }, { onSuccess: () => setEditingMsg(null) });
+  };
+  const handleDeleteReply = (doubtId: string, index: number) => { deleteReply.mutate({ doubtId, replyIndex: index }); };
+
   if (studentLoading) {
     return (
       <div className="space-y-6">
