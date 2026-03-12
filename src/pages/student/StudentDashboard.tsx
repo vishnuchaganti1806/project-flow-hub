@@ -1,4 +1,5 @@
-import { Lightbulb, Users, Clock, Star, TrendingUp, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Lightbulb, Users, Clock, Star, TrendingUp, Trash2, MessageSquare, Plus, Send, CheckCircle2, Pencil, MoreVertical, X, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/shared/StatCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -7,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useStudents, useStudentProfile } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
@@ -14,6 +18,10 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useDeadlines, useDeleteDeadline } from "@/hooks/useDeadlines";
 import { useTeams } from "@/hooks/useTeams";
 import { useReviews } from "@/hooks/useReviews";
+import { useDoubts, useCreateDoubt, useReplyToDoubt, useResolveDoubt, useUpdateDoubt, useDeleteDoubt, useEditReply, useDeleteReply } from "@/hooks/useDoubts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { differenceInDays, parseISO, format, isPast } from "date-fns";
 
 function StarDisplay({ rating }: { rating: number }) {
