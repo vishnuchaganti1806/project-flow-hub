@@ -122,3 +122,51 @@ export function useDeleteReply() {
     onError: () => toast.error("Failed to delete message"),
   });
 }
+
+export function useUpdateDoubt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ doubtId, subject, message }: { doubtId: string; subject?: string; message?: string }) => {
+      const updates: Record<string, string> = {};
+      if (subject !== undefined) updates.subject = subject;
+      if (message !== undefined) updates.message = message;
+      const { error } = await supabase.from("doubts").update(updates).eq("id", doubtId);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["doubts"] }); toast.success("Doubt updated"); },
+    onError: () => toast.error("Failed to update doubt"),
+  });
+}
+
+export function useDeleteDoubt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (doubtId: string) => {
+      const { error } = await supabase.from("doubts").delete().eq("id", doubtId);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["doubts"] }); toast.success("Doubt deleted"); },
+    onError: () => toast.error("Failed to delete doubt"),
+  });
+}
+
+export function useCreateDoubtAsGuide() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (data: { subject: string; studentId: string; message: string }) => {
+      const replies: Json = [{ sender: user!.name, text: data.message, timestamp: new Date().toISOString() }];
+      const { data: result, error } = await supabase.from("doubts").insert({
+        subject: data.subject,
+        message: data.message,
+        student_id: data.studentId,
+        guide_id: user!.id,
+        replies,
+      }).select().single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["doubts"] }); toast.success("Doubt posted"); },
+    onError: () => toast.error("Failed to post doubt"),
+  });
+}
