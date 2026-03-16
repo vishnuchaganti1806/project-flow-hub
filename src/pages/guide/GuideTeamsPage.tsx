@@ -21,7 +21,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, FolderKanban, UserCheck, Calendar, Send,
-  FileText, Clock, ChevronRight, MessageSquare, Plus, Star,
+  FileText, Clock, ChevronRight, MessageSquare, Plus, Star, Pencil, Trash2, Check, X,
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import * as XLSX from "xlsx";
