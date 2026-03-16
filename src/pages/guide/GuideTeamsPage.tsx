@@ -16,7 +16,7 @@ import { useTeams } from "@/hooks/useTeams";
 import { useStudents } from "@/hooks/useStudents";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useDeadlines, useCreateDeadline } from "@/hooks/useDeadlines";
-import { useTeamMessages, useSendTeamMessage } from "@/hooks/useTeamMessages";
+import { useTeamMessages, useSendTeamMessage, useUpdateTeamMessage, useDeleteTeamMessage } from "@/hooks/useTeamMessages";
 import { useReviews } from "@/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import {
