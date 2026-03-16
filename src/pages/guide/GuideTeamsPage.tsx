@@ -275,17 +275,37 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
                   <p className="text-sm text-muted-foreground text-center py-8">No messages yet. Send a message to your team.</p>
                 ) : (
                   <div className="space-y-3">
-                    {messages.map((msg) => (
-                      <div key={msg.id} className={`flex flex-col ${msg.senderId === user?.id ? "items-end" : "items-start"}`}>
-                        <div className={`rounded-lg px-3 py-2 max-w-[80%] ${msg.senderId === user?.id ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                          <p className="text-xs font-medium mb-0.5">{msg.senderName}</p>
-                          <p className="text-sm">{msg.message}</p>
+                    {messages.map((msg) => {
+                      const isMe = msg.senderId === user?.id;
+                      const isEditing = editingMsgId === msg.id;
+                      return (
+                        <div key={msg.id} className={`group flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                          <div className={`rounded-lg px-3 py-2 max-w-[80%] ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                            <p className="text-xs font-medium mb-0.5">{msg.senderName}</p>
+                            {isEditing ? (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Textarea value={editMsgText} onChange={(e) => setEditMsgText(e.target.value)} className="min-h-[36px] text-sm bg-background text-foreground" autoFocus />
+                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => {
+                                  if (editMsgText.trim()) updateMessage.mutate({ messageId: msg.id, message: editMsgText.trim(), teamId: team.id }, { onSuccess: () => setEditingMsgId(null) });
+                                }}><Check className="h-3.5 w-3.5" /></Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingMsgId(null)}><X className="h-3.5 w-3.5" /></Button>
+                              </div>
+                            ) : (
+                              <p className="text-sm">{msg.message}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</p>
+                            {isMe && !isEditing && (
+                              <span className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditingMsgId(msg.id); setEditMsgText(msg.message); }}><Pencil className="h-3 w-3" /></Button>
+                                <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={() => setDeleteMsgConfirm(msg.id)}><Trash2 className="h-3 w-3" /></Button>
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </ScrollArea>
@@ -303,6 +323,21 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
               </div>
             </CardContent>
           </Card>
+
+          <AlertDialog open={!!deleteMsgConfirm} onOpenChange={(o) => !o && setDeleteMsgConfirm(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete message?</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+                  if (deleteMsgConfirm) deleteMessage.mutate({ messageId: deleteMsgConfirm, teamId: team.id }, { onSuccess: () => setDeleteMsgConfirm(null) });
+                }}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
       </Tabs>
     </div>
