@@ -36,11 +36,16 @@ function TeamDetailView({ team, onClose }: { team: any; onClose: () => void }) {
   const createDeadline = useCreateDeadline();
   const { data: messages, isLoading: messagesLoading } = useTeamMessages(team.id);
   const sendMessage = useSendTeamMessage();
+  const updateMessage = useUpdateTeamMessage();
+  const deleteMessage = useDeleteTeamMessage();
 
   const [newDeadlineTitle, setNewDeadlineTitle] = useState("");
   const [newDeadlineDate, setNewDeadlineDate] = useState("");
   const [messageText, setMessageText] = useState("");
   const [dlDialogOpen, setDlDialogOpen] = useState(false);
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
+  const [editMsgText, setEditMsgText] = useState("");
+  const [deleteMsgConfirm, setDeleteMsgConfirm] = useState<string | null>(null);
 
   const members = students?.filter((s) => team.members.includes(s.userId)) ?? [];
   const teamIdeas = (ideas ?? []).filter(
