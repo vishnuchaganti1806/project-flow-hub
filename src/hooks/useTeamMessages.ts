@@ -55,8 +55,44 @@ export function useSendTeamMessage() {
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["team-messages", vars.teamId] });
-      toast.success("Message sent to team");
+      toast.success("Message sent");
     },
     onError: () => toast.error("Failed to send message"),
+  });
+}
+
+export function useUpdateTeamMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ messageId, message, teamId }: { messageId: string; message: string; teamId: string }) => {
+      const { error } = await (supabase.from("team_messages") as any)
+        .update({ message })
+        .eq("id", messageId);
+      if (error) throw error;
+      return teamId;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["team-messages", vars.teamId] });
+      toast.success("Message updated");
+    },
+    onError: () => toast.error("Failed to update message"),
+  });
+}
+
+export function useDeleteTeamMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ messageId, teamId }: { messageId: string; teamId: string }) => {
+      const { error } = await (supabase.from("team_messages") as any)
+        .delete()
+        .eq("id", messageId);
+      if (error) throw error;
+      return teamId;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["team-messages", vars.teamId] });
+      toast.success("Message deleted");
+    },
+    onError: () => toast.error("Failed to delete message"),
   });
 }
